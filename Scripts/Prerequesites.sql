@@ -4,7 +4,7 @@ IF NOT EXISTS
      FROM master.sys.server_principals
      WHERE name = 'bpapiuser')
 BEGIN
-    CREATE LOGIN bpapiuser WITH PASSWORD = 'Bpapipassword!'
+    CREATE LOGIN bpapiuser WITH PASSWORD = 'Bpapipassword!'--CHANGE PASSWORD IF NEEDED (AND CORRESPONDINGLY IN APPSETTINGS.JSON
 END
 GO
 

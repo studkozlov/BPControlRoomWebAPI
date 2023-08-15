@@ -9,12 +9,9 @@ namespace BPControlRoomWebAPI.Models.ViewModels
         public string ConnectionName { get; set; }
         public string Username { get; set; }
         public SecureString Password { get; set; }
-        public string PasswordAsString
+        public string GetPasswordAsString()
         {
-            get
-            {
                 return new NetworkCredential("", Password).Password;
-            }
         }
 
         public AuthenticationParams(ClaimsPrincipal user)
