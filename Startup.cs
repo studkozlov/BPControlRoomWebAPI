@@ -66,6 +66,15 @@ namespace BPControlRoomWebAPI
                     };
                 });
             services.AddControllers();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("cors_enable", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -82,6 +91,8 @@ namespace BPControlRoomWebAPI
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseCors("cors_enable");
 
             app.UseEndpoints(endpoints =>
             {

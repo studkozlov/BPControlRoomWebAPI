@@ -1,0 +1,329 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="Images/favicon.png">
+    <title>BP Web Control Room</title>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 60%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        /*####################################*/
+        html,
+        body {
+            margin: 0px;
+        }
+        /*####################################*/
+        /* Remove default bullets */
+        ul, #items-list {
+            list-style-type: none;
+            width: max-content;
+        }
+
+        /* Remove margins and padding from the parent ul */
+        #items-list {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Style the caret/arrow */
+        .caret {
+            cursor: default;
+            user-select: none; /* Prevent text selection */
+        }
+
+        /* Create the caret/arrow with a unicode, and style it */
+        .caret::before {
+            content: "\229E";
+            color: black;
+            display: table-caption;
+            margin-right: 6px;
+            font-size:10px;
+        }
+
+        /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+        .caret-down::before {
+            content: "\229F";
+        }
+
+        /* Hide the nested list */
+        .nested {
+            display: none;
+        }
+
+        /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+        .active {
+            display: block;
+        } 
+        .simple {
+            cursor:default;
+            user-select:none;
+        }
+        .selected {
+            border: 1px solid #0000ff;
+            background-color: #b9d9f4;
+        }
+
+        ul{
+            padding-left:40px;
+        }
+    </style>
+</head>
+<body>
+    <div id="modal-window" class="modal">
+        <div class="modal-content">
+            <p>
+                <label for="api-url">
+                    BP Control room web API URL:
+                </label>
+                <input type="text" id="api-url" size="50"/>
+                <br /><br />
+                <div style="display: flex; width: 100%; align-items: center; justify-content: space-around;">
+                    <button id="btn-apply-settings">Apply</button>
+                </div>
+            </p>
+        </div>
+
+    </div>
+    <div style="position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px; display: flex; flex-direction: column-reverse">
+        <div id="footer" style="height: 25px; background-color: #0072C6; display: flex; flex-direction: row">
+            <div id="sign-out" style="background-color: #0072C6; color: white; display: none; align-items: center; justify-content: space-around;padding:1px 5px; cursor:pointer;">
+                <img src="Images/Sign_out.png" />
+                Sign Out
+            </div>
+            <div style="display: flex; flex-direction: row-reverse; align-items: center; padding: 1px 5px; width:90%; color:white;font-size:20px;">
+                <div id="settings" style="cursor:pointer;">
+                    <span><b>&#9881;</b></span>
+                </div>
+            </div>
+        </div>
+        <div id="sign-in-view" style="background-color: #f0f0f0; display: flex; justify-content: space-around;height:100%;">
+            <div id="sign-in-details" style="background-color:white; width:60%; border: 1px solid black;margin:50px; padding: 10px;">
+                <h2>Sign in to Blue Prism</h2>
+                <p>Connection</p>
+                <select id="select-connection" style="width:100%;"></select>
+                <br /><br /><br />
+                <fieldset>
+                    <legend><b>Sign in with Blue Prism credentials</b></legend>
+                    <label for="username">
+                        User name
+                    </label>
+                    <br />
+                    <input type="text" id="username" style="width:100%;" />
+                    <br /><br />
+                    <label for="password">
+                        Password
+                    </label>
+                    <br />
+                    <input type="password" id="password" style="width:100%;" />
+                    <br />
+                    <div id="login-error" style="color:red"></div>
+                    <br />
+                    <button id="btn-log-in" style="background-color:white; color:steelblue; height:30px; width:50%; float:right;cursor:pointer;">Sign in using Blue Prism credentials</button>
+                </fieldset>
+                <div style="display:flex; justify-content:space-around;">
+                    <img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px; display:none" />
+                </div>
+            </div>
+        </div>
+        <div id="main-views" style="background-color: #fefefe; display: none; flex-direction:row; height:100%;">
+            <div id="queue-management-view" style="height:100%; width:20%; background-color:blueviolet">
+                Work queues
+            </div>
+            <div id="right-views-container" style="height:100%; width:80%; display:flex; flex-direction:column;">
+                <div id="top-right-views-container" style="height:50%; width: 100%; display:flex; flex-direction:row">
+                    <div id="available-processes-view" style="height: 100%; width: 50%;">
+                        <b>Available processes</b>       - Drag and drop processes on to resources
+                        <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                            <div style="height:20px; display:flex; flex-direction:row">
+                                <div style="width:320px; padding-left: 10px;">Name</div>
+                                <div style="border:1px solid #a0a0a0"></div>
+                                <div style="padding-left:10px">Description</div>
+                            </div>
+                            <ul id="items-list">
+                                <li>
+                                    <span class="caret"><img src="Images/Folder.png" />Default</span>
+                                    <ul class="nested">
+                                        <li class="simple" draggable="true">
+                                            <div style="display:flex; flex-direction:row;">
+                                                <div style="width:300px; overflow:hidden;">
+                                                    <img src="Images/Process.png" />Process One
+                                                </div>
+                                                <div style="width:max-content; overflow:hidden;">
+                                                    Lorem ipsum blah blah blah
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="simple" draggable="true">
+                                            <div style="display:flex; flex-direction:row;">
+                                                <div style="width:300px; overflow:hidden;">
+                                                    <img src="Images/Process.png" />Process Two
+                                                </div>
+                                                <div style="width:max-content; overflow:hidden;">
+                                                    Lorem ipsum blah blah blah
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="simple" draggable="true">
+                                            <div style="display:flex; flex-direction:row;">
+                                                <div style="width:300px; overflow:hidden;">
+                                                    <img src="Images/Process.png" />Process Three
+                                                </div>
+                                                <div style="width:max-content; overflow:hidden;">
+                                                    Lorem ipsum blah blah blah
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="resources-view" style="height: 100%; width: 50%; background-color: greenyellow;">
+                        Resources
+                    </div>
+                </div>
+                <div id="environment-view" style="height: 50%; width: 100%; background-color:lightskyblue;">
+                    Environment
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        let apiUrlBase = "https://localhost:44303/";
+        let authToken = "";
+
+        function switchToAuthView() {
+            document.getElementById("sign-in-view").style.display = "flex";
+            document.getElementById("sign-out").style.display = "none";
+            document.getElementById("main-views").style.display = "none";
+        }
+
+        function switchToPostAuthView() {
+            document.getElementById("sign-in-view").style.display = "none";
+            document.getElementById("sign-out").style.display = "flex";
+            document.getElementById("main-views").style.display = "flex";
+        }
+
+        function initConnectionsList() {
+            var combobox = document.getElementById("select-connection");
+            combobox.innerHTML = "";
+            fetch(apiUrlBase + "Connections")
+                .then((res) => res.json())
+                .then((data) => {
+                    data.forEach((i) => combobox.add(new Option(i, i), undefined));
+                });
+        }
+        initConnectionsList();
+        switchToPostAuthView();////////////////////////////////
+
+        var modal = document.getElementById("modal-window");
+        var btnOpenSettings = document.getElementById("settings");
+        var btnApplySettings = document.getElementById("btn-apply-settings");
+        var editApiUrl = document.getElementById("api-url");
+        var btnLogIn = document.getElementById("btn-log-in");
+        var btnLogOut = document.getElementById("sign-out");
+
+        btnOpenSettings.onclick = function () {
+            editApiUrl.value = apiUrlBase;
+            modal.style.display = "block";
+        }
+        btnApplySettings.onclick = function () {
+            apiUrlBase = editApiUrl.value;
+            initConnectionsList();
+            modal.style.display = "none";
+        }
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        btnLogIn.onclick = function () {
+            var data = {
+                ConnectionName: document.getElementById("select-connection").value,
+                Username: document.getElementById("username").value,
+                Password: document.getElementById("password").value
+            };
+
+            document.getElementById("login-loading").style.display = "inline";
+
+            fetch(apiUrlBase + "connections/login", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data)
+            }).then(res => res.text())
+                .then(data => {
+                    const regex = new RegExp(/^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)/gm);
+                    if (regex.test(data)) {
+                        authToken = data;
+                        document.getElementById("login-error").innerHTML = "";
+                        switchToPostAuthView();
+                    }
+                    else {
+                        document.getElementById("login-error").innerHTML = data;
+                    }
+                    document.getElementById("login-loading").style.display = "none";
+                })
+                .catch(err => {
+                    document.getElementById("login-error").innerHTML = err;
+                    document.getElementById("login-loading").style.display = "none";
+                });
+        }
+        btnLogOut.onclick = function () {
+            authToken = "";
+            switchToAuthView();
+        }
+
+        var toggler = document.getElementsByClassName("caret");
+
+        for (var i = 0; i < toggler.length; i++) {
+            toggler[i].addEventListener("click", function () {
+                this.parentElement.querySelector(".nested").classList.toggle("active");
+                this.classList.toggle("caret-down");
+            });
+        }
+
+        var listElements = document.querySelectorAll("li.simple");
+
+        for (var i = 0; i < listElements.length; i++) {
+            listElements[i].addEventListener("click", function () {
+                for (var j = 0; j < listElements.length; j++)
+                    listElements[j].classList.remove("selected");
+                this.classList.toggle("selected");
+            });
+        }
+    </script>
+</body>
+</html>
