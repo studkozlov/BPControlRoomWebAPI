@@ -213,6 +213,9 @@
             </div>
             <div style="border:1px solid #808080"></div>
             <div id="right-views-container" style="height:100%; width:80%; display:flex; flex-direction:column;">
+                <div style="height: 40px; line-height: 40px; padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: large; ">
+                    Sessions - Control currently running sessions
+                </div>
                 <div id="top-right-views-container" style="height:50%; width: 100%; display:flex; flex-direction:row">
                     <div id="available-processes-view" style="height: 100%; width: 50%;">
                         <b>Available processes</b>       - Drag and drop processes on to resources
@@ -289,7 +292,7 @@
                                                     <img src="Images/Busy_rr.png" />Resource Two
                                                 </div>
                                                 <div style="width:max-content; overflow:hidden;">
-                                                    Busy
+                                                    Working
                                                 </div>
                                             </div>
                                         </li>
@@ -305,37 +308,39 @@
                     <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                         <table>
                             <thead>
-                                <th>ID</th>
-                                <th>Process</th>
-                                <th>Resource</th>
-                                <th>User</th>
-                                <th>Status</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Latest Stage</th>
+                                <tr style="text-align: left;">
+                                    <th>ID</th>
+                                    <th>Process</th>
+                                    <th>Resource</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Latest Stage</th>
+                                </tr>
                             </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>3376</td>
-                                        <td>Process One</td>
-                                        <td>Resource Two</td>
-                                        <td>admin</td>
-                                        <td>Processing</td>
-                                        <td>8/21/2023 12:18:50 PM</td>
-                                        <td></td>
-                                        <td>Validate Parameters</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3375</td>
-                                        <td>Process One</td>
-                                        <td>Resource Two</td>
-                                        <td>admin</td>
-                                        <td>Completed</td>
-                                        <td>8/21/2023 12:00:42 PM</td>
-                                        <td>8/21/2023 12:06:18 PM</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
+                            <tbody>
+                                <tr>
+                                    <td>3376</td>
+                                    <td>Process One</td>
+                                    <td>Resource Two</td>
+                                    <td>admin</td>
+                                    <td>Processing</td>
+                                    <td>8/21/2023 12:18:50 PM</td>
+                                    <td></td>
+                                    <td>Validate Parameters</td>
+                                </tr>
+                                <tr>
+                                    <td>3375</td>
+                                    <td>Process One</td>
+                                    <td>Resource Two</td>
+                                    <td>admin</td>
+                                    <td>Completed</td>
+                                    <td>8/21/2023 12:00:42 PM</td>
+                                    <td>8/21/2023 12:06:18 PM</td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
