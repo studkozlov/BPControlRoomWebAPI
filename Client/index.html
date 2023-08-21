@@ -51,9 +51,13 @@
         }
 
         /* Remove margins and padding from the parent ul */
-        #items-list {
+        #items-list, #control-items-list {
             margin: 0;
             padding: 0;
+        }
+
+        ul {
+            padding-left: 40px;
         }
 
         /* Style the caret/arrow */
@@ -93,9 +97,25 @@
             border: 1px solid #0000ff;
             background-color: #b9d9f4;
         }
+        tr.selected {
+            background-color: #0078d7;
+            color: white;
+        }
 
-        ul{
-            padding-left:40px;
+        th {
+            border-right: 1px solid #a0a0a0;
+            padding: 2px 5px 2px 5px;
+        }
+
+        td {
+            padding: 2px 5px 2px 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            border: none;
+        }
+
+        tr {
+            cursor: default;
         }
     </style>
 </head>
@@ -157,9 +177,41 @@
             </div>
         </div>
         <div id="main-views" style="background-color: #fefefe; display: none; flex-direction:row; height:100%;">
-            <div id="queue-management-view" style="height:100%; width:20%; background-color:blueviolet">
-                Work queues
+            <div id="control-view" style="height: 100%; width: 20%; display: flex; flex-direction: column; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; ">
+                <div style="height: 40px; line-height: 40px; text-align: center; background-color: #696969; color: white; font-size: large; ">
+                    Control
+                </div>
+                <div style="padding:10px; height:100%; font-size:small">
+                    <ul id="control-items-list">
+                        <li  id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;">
+                            <img src="Images/Session_mngmt.png" />Session Management
+                        </li>
+                        <li>
+                            <span class="caret"><img src="Images/Queue_mngmt.png" />Queue Management</span>
+                            <ul class="nested">
+                                <li class="simple">
+                                    <img src="Images/Wq.png" />Test Work Queue
+                                </li>
+                                <li>
+                                    <span class="caret"><img src="Images/Folder.png" />My Work Queues Group</span>
+                                    <ul class="nested">
+                                        <li class="simple">
+                                            <img src="Images/Wq.png" />Parent Items Queue
+                                        </li>
+                                        <li class="simple">
+                                            <img src="Images/Wq.png" />Child Items Queue
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="simple">
+                                    <img src="Images/Wq.png" />Queue 1
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
+            <div style="border:1px solid #808080"></div>
             <div id="right-views-container" style="height:100%; width:80%; display:flex; flex-direction:column;">
                 <div id="top-right-views-container" style="height:50%; width: 100%; display:flex; flex-direction:row">
                     <div id="available-processes-view" style="height: 100%; width: 50%;">
@@ -209,12 +261,91 @@
                             </ul>
                         </div>
                     </div>
-                    <div id="resources-view" style="height: 100%; width: 50%; background-color: greenyellow;">
-                        Resources
+                    <div id="resources-view" style="height: 100%; width: 50%;">
+                        <b>Resources</b>
+                        <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                            <div style="height:20px; display:flex; flex-direction:row">
+                                <div style="width:220px; padding-left: 10px;">Name</div>
+                                <div style="border:1px solid #a0a0a0"></div>
+                                <div style="padding-left:10px">State</div>
+                            </div>
+                            <ul id="items-list">
+                                <li>
+                                    <span class="caret"><img src="Images/Folder.png" />Default</span>
+                                    <ul class="nested">
+                                        <li class="simple">
+                                            <div style="display:flex; flex-direction:row;">
+                                                <div style="width:200px; overflow:hidden;">
+                                                    <img src="Images/Idle_rr.png" />Resource One
+                                                </div>
+                                                <div style="width:max-content; overflow:hidden;">
+                                                    Idle
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="simple">
+                                            <div style="display:flex; flex-direction:row;">
+                                                <div style="width:200px; overflow:hidden;">
+                                                    <img src="Images/Busy_rr.png" />Resource Two
+                                                </div>
+                                                <div style="width:max-content; overflow:hidden;">
+                                                    Busy
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <div id="environment-view" style="height: 50%; width: 100%; background-color:lightskyblue;">
-                    Environment
+                <div style="border:1px solid #808080"></div>
+                <div id="environment-view" style="height: 50%; width: 100%;">
+                    <b>Environment</b>
+                    <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                        <table>
+                            <thead>
+                                <th>ID</th>
+                                <th>Process</th>
+                                <th>Resource</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Latest Stage</th>
+                            </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>3376</td>
+                                        <td>Process One</td>
+                                        <td>Resource Two</td>
+                                        <td>admin</td>
+                                        <td>Processing</td>
+                                        <td>8/21/2023 12:18:50 PM</td>
+                                        <td></td>
+                                        <td>Validate Parameters</td>
+                                    </tr>
+                                    <tr>
+                                        <td>3375</td>
+                                        <td>Process One</td>
+                                        <td>Resource Two</td>
+                                        <td>admin</td>
+                                        <td>Completed</td>
+                                        <td>8/21/2023 12:00:42 PM</td>
+                                        <td>8/21/2023 12:06:18 PM</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="queue-management-views" style="height:100%; width:80%; display:none; flex-direction:column;">
+                <div id="queue-view" style="height:40%; background-color:coral;">
+                    Queue info
+                </div>
+                <div id="queue-items-view" style="height:60%; background-color:lightpink;">
+                    Queue items
                 </div>
             </div>
         </div>
@@ -323,6 +454,33 @@
                     listElements[j].classList.remove("selected");
                 this.classList.toggle("selected");
             });
+        }
+
+        var tableRows = document.querySelectorAll("tbody tr");
+
+        for (var i = 0; i < tableRows.length; i++) {
+            tableRows[i].addEventListener("click", function () {
+                for (var j = 0; j < tableRows.length; j++)
+                    tableRows[j].classList.remove("selected");
+                this.classList.toggle("selected");
+            });
+        }
+
+        var optionSessionManagement = document.getElementById("session-management");
+        optionSessionManagement.onclick = function () {
+            document.getElementById("queue-management-views").style.display = "none";
+            document.getElementById("right-views-container").style.display = "flex";
+        }
+
+        var queueItems = document.querySelectorAll("#control-items-list .simple");
+
+        for (var i = 0; i < queueItems.length; i++) {
+            if (queueItems[i].id != "session-management") {
+                queueItems[i].addEventListener("click", function () {
+                    document.getElementById("queue-management-views").style.display = "flex";
+                    document.getElementById("right-views-container").style.display = "none";
+                })
+            };
         }
     </script>
 </body>
