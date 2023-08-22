@@ -45,13 +45,13 @@
         }
         /*####################################*/
         /* Remove default bullets */
-        ul, #items-list {
+        ul, .items-list {
             list-style-type: none;
             width: max-content;
         }
 
         /* Remove margins and padding from the parent ul */
-        #items-list, #control-items-list {
+        .items-list, #control-items-list {
             margin: 0;
             padding: 0;
         }
@@ -102,9 +102,20 @@
             color: white;
         }
 
+        .dragged-over {
+            background-color: #0d2a48;
+            color: white;
+        }
+
+        table {
+            min-width: 100%;
+        }
+
         th {
             border-right: 1px solid #a0a0a0;
             padding: 2px 5px 2px 5px;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         td {
@@ -116,6 +127,31 @@
 
         tr {
             cursor: default;
+        }
+
+        #work-queues-table, #work-items-table, #sessions-table {
+            border-spacing: 0;
+        }
+        #work-queues-table td, #work-items-table td {
+            border: 1px solid #eeeeee;
+        }
+        #work-queues-table .selected td, #work-items-table .selected td {
+            border: none;
+        }
+        #sessions-table td {
+            border: 1px thick #eeeeee;
+        }
+
+        #sessions-refresh:hover, #queues-refresh:hover {
+            background-color: #518bc7;
+        }
+        #sessions-refresh:active, #queues-refresh:active {
+            background-color: #4070a1;
+        }
+
+        #sign-out:hover, #settings:hover {
+            background-color: #b3d7f3;
+            border: 1px solid #0591ff;
         }
     </style>
 </head>
@@ -136,8 +172,8 @@
 
     </div>
     <div style="position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px; display: flex; flex-direction: column-reverse">
-        <div id="footer" style="height: 25px; background-color: #0072C6; display: flex; flex-direction: row">
-            <div id="sign-out" style="background-color: #0072C6; color: white; display: none; align-items: center; justify-content: space-around;padding:1px 5px; cursor:pointer;">
+        <div id="footer" style="height: 25px; background-color: #0d2a48; display: flex; flex-direction: row; justify-content: space-between;">
+            <div id="sign-out" style="color: white; display: none; align-items: center; justify-content: space-around;padding:1px 5px; cursor:pointer; white-space:nowrap;">
                 <img src="Images/Sign_out.png" />
                 Sign Out
             </div>
@@ -213,8 +249,9 @@
             </div>
             <div style="border:1px solid #808080"></div>
             <div id="right-views-container" style="height:100%; width:80%; display:flex; flex-direction:column;">
-                <div style="height: 40px; line-height: 40px; padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: large; ">
-                    Sessions - Control currently running sessions
+                <div style="height: 40px; line-height: 40px; padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: large; display:flex; justify-content:space-between;">
+                    <div>Sessions - Control currently running sessions</div>
+                    <div><img id="sessions-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png"  title="Refresh"/></div>
                 </div>
                 <div id="top-right-views-container" style="height:50%; width: 100%; display:flex; flex-direction:row">
                     <div id="available-processes-view" style="height: 100%; width: 50%;">
@@ -225,7 +262,7 @@
                                 <div style="border:1px solid #a0a0a0"></div>
                                 <div style="padding-left:10px">Description</div>
                             </div>
-                            <ul id="items-list">
+                            <ul class="items-list" id="processes-list">
                                 <li>
                                     <span class="caret"><img src="Images/Folder.png" />Default</span>
                                     <ul class="nested">
@@ -272,11 +309,11 @@
                                 <div style="border:1px solid #a0a0a0"></div>
                                 <div style="padding-left:10px">State</div>
                             </div>
-                            <ul id="items-list">
+                            <ul class="items-list" id="resources-list">
                                 <li>
                                     <span class="caret"><img src="Images/Folder.png" />Default</span>
                                     <ul class="nested">
-                                        <li class="simple">
+                                        <li class="simple" ondragover="allowDrop(event)">
                                             <div style="display:flex; flex-direction:row;">
                                                 <div style="width:200px; overflow:hidden;">
                                                     <img src="Images/Idle_rr.png" />Resource One
@@ -286,7 +323,7 @@
                                                 </div>
                                             </div>
                                         </li>
-                                        <li class="simple">
+                                        <li class="simple" ondragover="allowDrop(event)">
                                             <div style="display:flex; flex-direction:row;">
                                                 <div style="width:200px; overflow:hidden;">
                                                     <img src="Images/Busy_rr.png" />Resource Two
@@ -302,11 +339,13 @@
                         </div>
                     </div>
                 </div>
-                <div style="border:1px solid #808080"></div>
+                <div style="border:1px solid #808080">
+
+                </div>
                 <div id="environment-view" style="height: 50%; width: 100%;">
                     <b>Environment</b>
                     <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
-                        <table>
+                        <table id="sessions-table">
                             <thead>
                                 <tr style="text-align: left;">
                                     <th>ID</th>
@@ -346,11 +385,108 @@
                 </div>
             </div>
             <div id="queue-management-views" style="height:100%; width:80%; display:none; flex-direction:column;">
-                <div id="queue-view" style="height:40%; background-color:coral;">
-                    Queue info
+                <div style="height: 40px; line-height: 40px; padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: large; display: flex; justify-content: space-between;">
+                    <div>Queues</div>
+                    <div><img id="queues-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png" title="Refresh" /></div>
                 </div>
-                <div id="queue-items-view" style="height:60%; background-color:lightpink;">
-                    Queue items
+                <div id="queue-view" style="height:40%;">
+                    <div id="queues-title" style="font-size:smaller; margin-left:5px;"><b>2 queues</b>
+                    </div>
+                    <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                        <table id="work-queues-table">
+                            <thead>
+                                <tr style="text-align: left;">
+                                    <th>Queue Name</th>
+                                    <th>Status</th>
+                                    <th>Worked</th>
+                                    <th>Pending</th>
+                                    <th>Referred</th>
+                                    <th>Total</th>
+                                    <th>Average Case Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><img src="Images/Queue_paused.png" /> Queue 1</td>
+                                    <td>Paused</td>
+                                    <td>7</td>
+                                    <td>2</td>
+                                    <td>5</td>
+                                    <td>14</td>
+                                    <td>00:13</td>
+                                </tr>
+                                <tr>
+                                    <td><img src="Images/Queue_running.png" /> Queue 2</td>
+                                    <td>Running</td>
+                                    <td>16</td>
+                                    <td>0</td>
+                                    <td>4</td>
+                                    <td>20</td>
+                                    <td>00:05</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="queue-items-view" style="height:60%;">
+                    <div style="font-size: smaller; margin-left: 5px;"><b>Queue contents</b>
+                    </div>
+                    <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                        <table id="work-items-table">
+                            <thead>
+                                <tr style="text-align: left;">
+                                    <th></th>
+                                    <th style="min-width:60px;">Item Key</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Tags</th>
+                                    <th>Resource</th>
+                                    <th>Attempt</th>
+                                    <th>Created</th>
+                                    <th>Last Updated</th>
+                                    <th>Next Review</th>
+                                    <th>Completed</th>
+                                    <th>Total Work Time</th>
+                                    <th>Exception Date</th>
+                                    <th>Exception Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><img src="Images/Item_done.png" /></td>
+                                    <td>5</td>
+                                    <td>0</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Resource Two</td>
+                                    <td>1</td>
+                                    <td>3/22/2018 12:11:10 PM</td>
+                                    <td>3/22/2018 12:27:36 PM</td>
+                                    <td>3/22/2018 12:24:27 PM</td>
+                                    <td>3/22/2018 12:27:36 PM</td>
+                                    <td>00:03</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><img src="Images/Item_done.png" /></td>
+                                    <td>4</td>
+                                    <td>0</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>Resource Two</td>
+                                    <td>1</td>
+                                    <td>3/22/2018 12:11:10 PM</td>
+                                    <td>3/22/2018 12:27:34 PM</td>
+                                    <td>3/22/2018 12:24:25 PM</td>
+                                    <td>3/22/2018 12:27:34 PM</td>
+                                    <td>00:04</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -443,7 +579,6 @@
         }
 
         var toggler = document.getElementsByClassName("caret");
-
         for (var i = 0; i < toggler.length; i++) {
             toggler[i].addEventListener("click", function () {
                 this.parentElement.querySelector(".nested").classList.toggle("active");
@@ -452,7 +587,6 @@
         }
 
         var listElements = document.querySelectorAll("li.simple");
-
         for (var i = 0; i < listElements.length; i++) {
             listElements[i].addEventListener("click", function () {
                 for (var j = 0; j < listElements.length; j++)
@@ -462,7 +596,6 @@
         }
 
         var tableRows = document.querySelectorAll("tbody tr");
-
         for (var i = 0; i < tableRows.length; i++) {
             tableRows[i].addEventListener("click", function () {
                 for (var j = 0; j < tableRows.length; j++)
@@ -478,7 +611,6 @@
         }
 
         var queueItems = document.querySelectorAll("#control-items-list .simple");
-
         for (var i = 0; i < queueItems.length; i++) {
             if (queueItems[i].id != "session-management") {
                 queueItems[i].addEventListener("click", function () {
@@ -487,6 +619,40 @@
                 })
             };
         }
+
+        var processesItems = document.querySelectorAll("#processes-list .simple");
+        for (var i = 0; i < processesItems.length; i++) {
+            processesItems[i].addEventListener("dragstart", function (e) {
+                var img = new Image();
+                img.src = "Images/Process.png";
+                e.dataTransfer.setDragImage(img, -5, -5);
+            }, false);
+        }
+
+        var resourceItems = document.querySelectorAll("#resources-list .simple");
+        for (var i = 0; i < resourceItems.length; i++) {
+            resourceItems[i].addEventListener("dragenter", function () {
+                this.classList.add("dragged-over");
+            });
+            resourceItems[i].addEventListener("dragleave", function () {
+                this.classList.remove("dragged-over");
+            });
+            resourceItems[i].addEventListener("drop", function () {
+                this.classList.remove("dragged-over");
+            });
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function expandTreeViews() {
+            var expandableItems = document.querySelectorAll(".caret");
+            for (var i = 0; i < expandableItems.length; i++) {
+                expandableItems[i].click();
+            }
+        };
+        expandTreeViews();
     </script>
 </body>
 </html>
