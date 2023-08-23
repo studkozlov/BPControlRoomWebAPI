@@ -37,7 +37,8 @@ namespace BPControlRoomWebAPI.Controllers
         public async Task<IEnumerable<BPSession>> Get()
         {
             return await _db.BPSessions.OrderByDescending(session => session.StartTime)
-                                      .ToArrayAsync();
+                                       .Where(s => s.Status != "Debugging" && s.StartTime > DateTime.Now.AddMonths(-1))
+                                       .ToArrayAsync();
         }
 
         [HttpPost]

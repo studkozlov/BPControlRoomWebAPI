@@ -99,16 +99,20 @@
         }
         tr.selected {
             background-color: #0078d7;
-            color: white;
+            color: white !important;
         }
 
         .dragged-over {
             background-color: #0d2a48;
             color: white;
         }
+        .dragged-over div {
+            color: white !important;
+        }
 
         table {
             min-width: 100%;
+            user-select: none;
         }
 
         th {
@@ -116,6 +120,9 @@
             padding: 2px 5px 2px 5px;
             white-space: nowrap;
             overflow: hidden;
+            position: sticky;
+            top: 0px;
+            background: #f6f6f6
         }
 
         td {
@@ -165,25 +172,13 @@
                 <input type="text" id="api-url" size="50"/>
                 <br /><br />
                 <div style="display: flex; width: 100%; align-items: center; justify-content: space-around;">
-                    <button id="btn-apply-settings">Apply</button>
+                    <button id="btn-apply-settings" onclick="applySettings()">Apply</button>
                 </div>
             </p>
         </div>
-
     </div>
-    <div style="position: fixed; top: 0px; bottom: 0px; left: 0px; right: 0px; display: flex; flex-direction: column-reverse">
-        <div id="footer" style="height: 25px; background-color: #0d2a48; display: flex; flex-direction: row; justify-content: space-between;">
-            <div id="sign-out" style="color: white; display: none; align-items: center; justify-content: space-around;padding:1px 5px; cursor:pointer; white-space:nowrap;">
-                <img src="Images/Sign_out.png" />
-                Sign Out
-            </div>
-            <div style="display: flex; flex-direction: row-reverse; align-items: center; padding: 1px 5px; width:90%; color:white;font-size:20px;">
-                <div id="settings" style="cursor:pointer;">
-                    <span><b>&#9881;</b></span>
-                </div>
-            </div>
-        </div>
-        <div id="sign-in-view" style="background-color: #f0f0f0; display: flex; justify-content: space-around;height:100%;">
+    <div style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column">
+        <div id="sign-in-view" style="background-color: #f0f0f0; display: flex; justify-content: space-around;flex-grow:1">
             <div id="sign-in-details" style="background-color:white; width:60%; border: 1px solid black;margin:50px; padding: 10px;">
                 <h2>Sign in to Blue Prism</h2>
                 <p>Connection</p>
@@ -205,41 +200,41 @@
                     <br />
                     <div id="login-error" style="color:red"></div>
                     <br />
-                    <button id="btn-log-in" style="background-color:white; color:steelblue; height:30px; width:50%; float:right;cursor:pointer;">Sign in using Blue Prism credentials</button>
+                    <button id="btn-log-in" style="background-color:white; color:steelblue; height:30px; width:50%; float:right;cursor:pointer;" onclick="logIn()">Sign in using Blue Prism credentials</button>
                 </fieldset>
                 <div style="display:flex; justify-content:space-around;">
                     <img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px; display:none" />
                 </div>
             </div>
         </div>
-        <div id="main-views" style="background-color: #fefefe; display: none; flex-direction:row; height:100%;">
-            <div id="control-view" style="height: 100%; width: 20%; display: flex; flex-direction: column; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; ">
+        <div id="main-views" style="background-color: #fefefe; display: none; flex-direction:row; flex-grow:1; overflow-y: hidden;">
+            <div id="control-view" style="height: 100%; width: 20%; display: flex; flex-direction: column; overflow: auto; font-family: Arial, Helvetica, sans-serif; ">
                 <div style="height: 40px; line-height: 40px; text-align: center; background-color: #696969; color: white; font-size: large; ">
                     Control
                 </div>
-                <div style="padding:10px; height:100%; font-size:small">
+                <div style="padding:10px; flex-grow:1; font-size:small">
                     <ul id="control-items-list">
-                        <li  id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;">
+                        <li id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;" onclick="selectItem(this); openSessionManagement()">
                             <img src="Images/Session_mngmt.png" />Session Management
                         </li>
                         <li>
-                            <span class="caret"><img src="Images/Queue_mngmt.png" />Queue Management</span>
+                            <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Queue_mngmt.png" />Queue Management</span>
                             <ul class="nested">
-                                <li class="simple">
+                                <li class="simple" onclick="selectItem(this); openQueueManagement()">
                                     <img src="Images/Wq.png" />Test Work Queue
                                 </li>
                                 <li>
-                                    <span class="caret"><img src="Images/Folder.png" />My Work Queues Group</span>
+                                    <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Folder.png" />My Work Queues Group</span>
                                     <ul class="nested">
-                                        <li class="simple">
+                                        <li class="simple" onclick="selectItem(this); openQueueManagement()">
                                             <img src="Images/Wq.png" />Parent Items Queue
                                         </li>
-                                        <li class="simple">
+                                        <li class="simple" onclick="selectItem(this); openQueueManagement()">
                                             <img src="Images/Wq.png" />Child Items Queue
                                         </li>
                                     </ul>
                                 </li>
-                                <li class="simple">
+                                <li class="simple" onclick="selectItem(this); openQueueManagement()">
                                     <img src="Images/Wq.png" />Queue 1
                                 </li>
                             </ul>
@@ -247,16 +242,18 @@
                     </ul>
                 </div>
             </div>
-            <div style="border:1px solid #808080"></div>
+            <div style="border:1px solid #808080; margin:0 2px;"></div>
             <div id="right-views-container" style="height:100%; width:80%; display:flex; flex-direction:column;">
                 <div style="height: 40px; line-height: 40px; padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: large; display:flex; justify-content:space-between;">
                     <div>Sessions - Control currently running sessions</div>
-                    <div><img id="sessions-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png"  title="Refresh"/></div>
+                    <div><img id="sessions-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png" title="Refresh" onclick="getResources(); getSessions()" /></div>
                 </div>
-                <div id="top-right-views-container" style="height:50%; width: 100%; display:flex; flex-direction:row">
-                    <div id="available-processes-view" style="height: 100%; width: 50%;">
-                        <b>Available processes</b>       - Drag and drop processes on to resources
-                        <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                <div id="top-right-views-container" style="flex-grow:1; width: 100%; display:flex; flex-direction:row; min-height:0;">
+                    <div id="available-processes-view" style="height: 100%; max-width: 50%; flex-grow: 1; display: flex; flex-direction:column;">
+                        <div>
+                            <b>Available processes</b>       - Drag and drop processes on to resources
+                        </div>
+                        <div id="processes-container" style="flex-grow:1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                             <div style="height:20px; display:flex; flex-direction:row">
                                 <div style="width:320px; padding-left: 10px;">Name</div>
                                 <div style="border:1px solid #a0a0a0"></div>
@@ -264,9 +261,9 @@
                             </div>
                             <ul class="items-list" id="processes-list">
                                 <li>
-                                    <span class="caret"><img src="Images/Folder.png" />Default</span>
+                                    <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Folder.png" />Default</span>
                                     <ul class="nested">
-                                        <li class="simple" draggable="true">
+                                        <li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)">
                                             <div style="display:flex; flex-direction:row;">
                                                 <div style="width:300px; overflow:hidden;">
                                                     <img src="Images/Process.png" />Process One
@@ -276,7 +273,7 @@
                                                 </div>
                                             </div>
                                         </li>
-                                        <li class="simple" draggable="true">
+                                        <li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)">
                                             <div style="display:flex; flex-direction:row;">
                                                 <div style="width:300px; overflow:hidden;">
                                                     <img src="Images/Process.png" />Process Two
@@ -286,7 +283,7 @@
                                                 </div>
                                             </div>
                                         </li>
-                                        <li class="simple" draggable="true">
+                                        <li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)">
                                             <div style="display:flex; flex-direction:row;">
                                                 <div style="width:300px; overflow:hidden;">
                                                     <img src="Images/Process.png" />Process Three
@@ -301,9 +298,11 @@
                             </ul>
                         </div>
                     </div>
-                    <div id="resources-view" style="height: 100%; width: 50%;">
-                        <b>Resources</b>
-                        <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                    <div id="resources-view" style="height: 100%; max-width: 50%; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div>
+                            <b>Resources</b>
+                        </div>
+                        <div style="flex-grow:1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                             <div style="height:20px; display:flex; flex-direction:row">
                                 <div style="width:220px; padding-left: 10px;">Name</div>
                                 <div style="border:1px solid #a0a0a0"></div>
@@ -311,9 +310,9 @@
                             </div>
                             <ul class="items-list" id="resources-list">
                                 <li>
-                                    <span class="caret"><img src="Images/Folder.png" />Default</span>
+                                    <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Folder.png" />Default</span>
                                     <ul class="nested">
-                                        <li class="simple" ondragover="allowDrop(event)">
+                                        <li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(this)">
                                             <div style="display:flex; flex-direction:row;">
                                                 <div style="width:200px; overflow:hidden;">
                                                     <img src="Images/Idle_rr.png" />Resource One
@@ -323,7 +322,7 @@
                                                 </div>
                                             </div>
                                         </li>
-                                        <li class="simple" ondragover="allowDrop(event)">
+                                        <li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(this)">
                                             <div style="display:flex; flex-direction:row;">
                                                 <div style="width:200px; overflow:hidden;">
                                                     <img src="Images/Busy_rr.png" />Resource Two
@@ -339,48 +338,52 @@
                         </div>
                     </div>
                 </div>
-                <div style="border:1px solid #808080">
+                <div style="border:1px solid #808080; margin:2px 0;">
 
                 </div>
-                <div id="environment-view" style="height: 50%; width: 100%;">
-                    <b>Environment</b>
-                    <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
-                        <table id="sessions-table">
-                            <thead>
-                                <tr style="text-align: left;">
-                                    <th>ID</th>
-                                    <th>Process</th>
-                                    <th>Resource</th>
-                                    <th>User</th>
-                                    <th>Status</th>
-                                    <th>Start Time</th>
-                                    <th>End Time</th>
-                                    <th>Latest Stage</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>3376</td>
-                                    <td>Process One</td>
-                                    <td>Resource Two</td>
-                                    <td>admin</td>
-                                    <td>Processing</td>
-                                    <td>8/21/2023 12:18:50 PM</td>
-                                    <td></td>
-                                    <td>Validate Parameters</td>
-                                </tr>
-                                <tr>
-                                    <td>3375</td>
-                                    <td>Process One</td>
-                                    <td>Resource Two</td>
-                                    <td>admin</td>
-                                    <td>Completed</td>
-                                    <td>8/21/2023 12:00:42 PM</td>
-                                    <td>8/21/2023 12:06:18 PM</td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div id="environment-view" style="flex-grow:1; width: 100%; display:flex; flex-direction:column; min-height: 0; max-height: 50%;">
+                    <div>
+                        <b>Environment</b>
+                    </div>
+                    <div style="flex-grow:1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                        <div style="height:100%">
+                            <table id="sessions-table">
+                                <thead>
+                                    <tr style="text-align: left;">
+                                        <th>ID</th>
+                                        <th>Process</th>
+                                        <th>Resource</th>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Latest Stage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr onclick="selectItem(this)">
+                                        <td>3376</td>
+                                        <td>Process One</td>
+                                        <td>Resource Two</td>
+                                        <td>admin</td>
+                                        <td>Processing</td>
+                                        <td>8/21/2023 12:18:50 PM</td>
+                                        <td></td>
+                                        <td>Validate Parameters</td>
+                                    </tr>
+                                    <tr onclick="selectItem(this)">
+                                        <td>3375</td>
+                                        <td>Process One</td>
+                                        <td>Resource Two</td>
+                                        <td>admin</td>
+                                        <td>Completed</td>
+                                        <td>8/21/2023 12:00:42 PM</td>
+                                        <td>8/21/2023 12:06:18 PM</td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -389,10 +392,11 @@
                     <div>Queues</div>
                     <div><img id="queues-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png" title="Refresh" /></div>
                 </div>
-                <div id="queue-view" style="height:40%;">
-                    <div id="queues-title" style="font-size:smaller; margin-left:5px;"><b>2 queues</b>
+                <div id="queue-view" style="flex-grow: 2; max-height: 40%; min-height: 0; display: flex; flex-direction: column">
+                    <div id="queues-title" style="font-size:smaller; margin-left:5px;">
+                        <b>2 queues</b>
                     </div>
-                    <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                    <div style="flex-grow: 1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                         <table id="work-queues-table">
                             <thead>
                                 <tr style="text-align: left;">
@@ -406,7 +410,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr onclick="selectItem(this)">
                                     <td><img src="Images/Queue_paused.png" /> Queue 1</td>
                                     <td>Paused</td>
                                     <td>7</td>
@@ -415,7 +419,7 @@
                                     <td>14</td>
                                     <td>00:13</td>
                                 </tr>
-                                <tr>
+                                <tr onclick="selectItem(this)">
                                     <td><img src="Images/Queue_running.png" /> Queue 2</td>
                                     <td>Running</td>
                                     <td>16</td>
@@ -428,10 +432,11 @@
                         </table>
                     </div>
                 </div>
-                <div id="queue-items-view" style="height:60%;">
-                    <div style="font-size: smaller; margin-left: 5px;"><b>Queue contents</b>
+                <div id="queue-items-view" style="flex-grow: 3; max-height: 60%; min-height: 0; display: flex; flex-direction: column">
+                    <div style="font-size: smaller; margin-left: 5px;">
+                        <b>Queue contents</b>
                     </div>
-                    <div style="height: 90%; border: 1px solid black; margin: 2px 5px 0 5px; overflow-y: scroll; overflow-x: scroll; font-family: Arial, Helvetica, sans-serif; font-size: small;">
+                    <div style="flex-grow: 1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                         <table id="work-items-table">
                             <thead>
                                 <tr style="text-align: left;">
@@ -452,7 +457,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr onclick="selectItem(this)">
                                     <td><img src="Images/Item_done.png" /></td>
                                     <td>5</td>
                                     <td>0</td>
@@ -468,7 +473,7 @@
                                     <td></td>
                                     <td></td>
                                 </tr>
-                                <tr>
+                                <tr onclick="selectItem(this)">
                                     <td><img src="Images/Item_done.png" /></td>
                                     <td>4</td>
                                     <td>0</td>
@@ -490,57 +495,33 @@
                 </div>
             </div>
         </div>
+        <div id="footer" style="height: 25px; background-color: #0d2a48; display: flex; flex-direction: row; justify-content: space-between;">
+            <div id="sign-out" style="color: white; display: none; align-items: center; justify-content: space-around;padding:1px 5px; cursor:pointer; white-space:nowrap;" onclick="logOut()">
+                <img src="Images/Sign_out.png" />
+                Sign Out
+            </div>
+            <div style="display: flex; flex-direction: row-reverse; align-items: center; padding: 1px 5px; width:90%; color:white;font-size:20px;">
+                <div id="settings" style="cursor:pointer;" onclick="openSettings()">
+                    <span><b>&#9881;</b></span>
+                </div>
+            </div>
+        </div>
     </div>
     <script type="text/javascript">
         let apiUrlBase = "https://localhost:44303/";
         let authToken = "";
+        let processes, resources, sessions, queues, queueItems;
 
-        function switchToAuthView() {
-            document.getElementById("sign-in-view").style.display = "flex";
-            document.getElementById("sign-out").style.display = "none";
-            document.getElementById("main-views").style.display = "none";
+        function openSettings() {
+            document.getElementById("api-url").value = apiUrlBase;
+            document.getElementById("modal-window").style.display = "block";
         }
-
-        function switchToPostAuthView() {
-            document.getElementById("sign-in-view").style.display = "none";
-            document.getElementById("sign-out").style.display = "flex";
-            document.getElementById("main-views").style.display = "flex";
-        }
-
-        function initConnectionsList() {
-            var combobox = document.getElementById("select-connection");
-            combobox.innerHTML = "";
-            fetch(apiUrlBase + "Connections")
-                .then((res) => res.json())
-                .then((data) => {
-                    data.forEach((i) => combobox.add(new Option(i, i), undefined));
-                });
-        }
-        initConnectionsList();
-        switchToPostAuthView();////////////////////////////////
-
-        var modal = document.getElementById("modal-window");
-        var btnOpenSettings = document.getElementById("settings");
-        var btnApplySettings = document.getElementById("btn-apply-settings");
-        var editApiUrl = document.getElementById("api-url");
-        var btnLogIn = document.getElementById("btn-log-in");
-        var btnLogOut = document.getElementById("sign-out");
-
-        btnOpenSettings.onclick = function () {
-            editApiUrl.value = apiUrlBase;
-            modal.style.display = "block";
-        }
-        btnApplySettings.onclick = function () {
-            apiUrlBase = editApiUrl.value;
+        function applySettings() {
+            apiUrlBase = document.getElementById("api-url").value;
             initConnectionsList();
-            modal.style.display = "none";
+            document.getElementById("modal-window").style.display = "none";
         }
-        window.onclick = function (event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-        btnLogIn.onclick = function () {
+        function logIn() {
             var data = {
                 ConnectionName: document.getElementById("select-connection").value,
                 Username: document.getElementById("username").value,
@@ -573,86 +554,235 @@
                     document.getElementById("login-loading").style.display = "none";
                 });
         }
-        btnLogOut.onclick = function () {
+        function logOut() {
             authToken = "";
             switchToAuthView();
         }
+        window.onclick = function (event) {
+            var modal = document.getElementById("modal-window");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        document.getElementById("password").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                logIn();
+            }
+        });
 
-        var toggler = document.getElementsByClassName("caret");
-        for (var i = 0; i < toggler.length; i++) {
-            toggler[i].addEventListener("click", function () {
-                this.parentElement.querySelector(".nested").classList.toggle("active");
-                this.classList.toggle("caret-down");
-            });
+        function refreshAllSessionManagement() {
+            getProcesses();
+            getResources();
+            getSessions();
+        }
+        function switchToAuthView() {
+            document.getElementById("sign-in-view").style.display = "flex";
+            document.getElementById("sign-out").style.display = "none";
+            document.getElementById("main-views").style.display = "none";
+        }
+        function switchToPostAuthView() {
+            document.getElementById("sign-in-view").style.display = "none";
+            document.getElementById("sign-out").style.display = "flex";
+            document.getElementById("main-views").style.display = "flex";
+            refreshAllSessionManagement();
+        }
+        function initConnectionsList() {
+            var combobox = document.getElementById("select-connection");
+            combobox.innerHTML = "";
+            fetch(apiUrlBase + "Connections")
+                .then((res) => res.json())
+                .then((data) => {
+                    data.forEach((i) => combobox.add(new Option(i, i), undefined));
+                });
         }
 
-        var listElements = document.querySelectorAll("li.simple");
-        for (var i = 0; i < listElements.length; i++) {
-            listElements[i].addEventListener("click", function () {
-                for (var j = 0; j < listElements.length; j++)
-                    listElements[j].classList.remove("selected");
-                this.classList.toggle("selected");
-            });
-        }
-
-        var tableRows = document.querySelectorAll("tbody tr");
-        for (var i = 0; i < tableRows.length; i++) {
-            tableRows[i].addEventListener("click", function () {
-                for (var j = 0; j < tableRows.length; j++)
-                    tableRows[j].classList.remove("selected");
-                this.classList.toggle("selected");
-            });
-        }
-
-        var optionSessionManagement = document.getElementById("session-management");
-        optionSessionManagement.onclick = function () {
+        function openSessionManagement() {
             document.getElementById("queue-management-views").style.display = "none";
             document.getElementById("right-views-container").style.display = "flex";
+
+            refreshAllSessionManagement();
+        }
+        function openQueueManagement() {
+            document.getElementById("queue-management-views").style.display = "flex";
+            document.getElementById("right-views-container").style.display = "none";
         }
 
-        var queueItems = document.querySelectorAll("#control-items-list .simple");
-        for (var i = 0; i < queueItems.length; i++) {
-            if (queueItems[i].id != "session-management") {
-                queueItems[i].addEventListener("click", function () {
-                    document.getElementById("queue-management-views").style.display = "flex";
-                    document.getElementById("right-views-container").style.display = "none";
-                })
-            };
+        function handleCaretClick(elem) {
+            elem.parentElement.querySelector(".nested").classList.toggle("active");
+            elem.classList.toggle("caret-down");
         }
 
-        var processesItems = document.querySelectorAll("#processes-list .simple");
-        for (var i = 0; i < processesItems.length; i++) {
-            processesItems[i].addEventListener("dragstart", function (e) {
-                var img = new Image();
-                img.src = "Images/Process.png";
-                e.dataTransfer.setDragImage(img, -5, -5);
-            }, false);
+        function selectItem(elem) {
+            var listElements = document.querySelectorAll("li.simple");
+            for (var i = 0; i < listElements.length; i++)
+                listElements[i].classList.remove("selected");
+            var tableRows = document.querySelectorAll("tbody tr");
+            for (var j = 0; j < tableRows.length; j++)
+                tableRows[j].classList.remove("selected");
+            elem.classList.toggle("selected");
         }
 
-        var resourceItems = document.querySelectorAll("#resources-list .simple");
-        for (var i = 0; i < resourceItems.length; i++) {
-            resourceItems[i].addEventListener("dragenter", function () {
-                this.classList.add("dragged-over");
-            });
-            resourceItems[i].addEventListener("dragleave", function () {
-                this.classList.remove("dragged-over");
-            });
-            resourceItems[i].addEventListener("drop", function () {
-                this.classList.remove("dragged-over");
-            });
+        function dragStartHandler(e) {
+            var img = new Image();
+            img.src = "Images/Process.png";
+            e.dataTransfer.setDragImage(img, -5, -5);
+            document.getElementById("processes-container").style.overflow = "hidden";
         }
-
+        function dragEndHandler(e) {
+            document.getElementById("processes-container").style.overflow = "auto";
+        }
+        function dragEnterHandler(elem) {
+            elem.classList.add("dragged-over");
+        }
+        function dragLeaveHandler(elem) {
+            elem.classList.remove("dragged-over");
+        }
+        function dropHandler(elem) {
+            elem.classList.remove("dragged-over");
+        }
         function allowDrop(ev) {
             ev.preventDefault();
         }
 
-        function expandTreeViews() {
-            var expandableItems = document.querySelectorAll(".caret");
+        function expandTreeView(elemId) {
+            var expandableItems = document.querySelectorAll("#" + elemId + " .caret");
             for (var i = 0; i < expandableItems.length; i++) {
                 expandableItems[i].click();
             }
         };
-        expandTreeViews();
+
+        function updateProcessesList() {
+            var htmlContent = "";
+            for (var i = 0; i < processes.length; i++) {
+                htmlContent += '<li><span class="caret" onclick = "handleCaretClick(this)"><img src="Images/Folder.png"/>'
+                    + processes[i].group
+                    + '</span><ul class="nested">';
+                for (var j = 0; j < processes[i].processes.length; j++) {
+                    htmlContent += '<li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)" ondragend="dragEndHandler(event)">'
+                        + '<div style = "display:flex; flex-direction:row;">'
+                        + '<div style="width:300px; overflow:hidden;">'
+                        + '<img src="Images/Process.png" />' + processes[i].processes[j].processName
+                        + '</div><div style="width:max-content; overflow:hidden;">' + processes[i].processes[j].processDescription
+                        + '</div></div ></li >';
+                }
+                htmlContent += '</ul ></li >';
+            }
+            document.getElementById("processes-list").innerHTML = htmlContent;
+        }
+        function getProcesses() {
+            document.getElementById("processes-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></li>';
+            fetch(apiUrlBase + "availableprocesses", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                }
+            }).then(res => res.json())
+                .then(data => {
+                    processes = data;
+                    updateProcessesList();
+                    expandTreeView("processes-list");
+                })
+                .catch(err => {
+                    document.getElementById("processes-list").innerHTML = '<li style="color:red;">' + err + '</li>';
+                });
+        }
+
+        function updateResourcesList() {
+            var htmlContent = "";
+            for (var i = 0; i < resources.length; i++) {
+                htmlContent += '<li><span class="caret" onclick = "handleCaretClick(this)"><img src="Images/Folder.png" />'
+                    + resources[i].group
+                    + '</span><ul class="nested">';
+                for (var j = 0; j < resources[i].resources.length; j++) {
+                    htmlContent += '<li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(this)">'
+                        + '<div style = "display:flex; flex-direction:row;' + (resources[i].resources[j].resourceStatus == "Idle" ? 'color:black;' : 'color:green;') + '">'
+                        + '<div style="width:200px; overflow:hidden;">'
+                        + '<img src="Images/' + (resources[i].resources[j].resourceStatus == "Idle" ? 'Idle_rr.png" />' : 'Busy_rr.png" />')
+                        + resources[i].resources[j].resourceName
+                        + '</div><div style="width:max-content; overflow:hidden;">'
+                        + resources[i].resources[j].resourceStatus
+                        + '</div></div ></li >';
+                }
+                htmlContent += '</ul ></li >';
+            }
+            document.getElementById("resources-list").innerHTML = htmlContent;
+        }
+        function getResources() {
+            document.getElementById("resources-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></li>';
+            fetch(apiUrlBase + "resources", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                }
+            }).then(res => res.json())
+                .then(data => {
+                    resources = data;
+                    updateResourcesList();
+                    expandTreeView("resources-list");
+                })
+                .catch(err => {
+                    document.getElementById("resources-list").innerHTML = '<li style="color:red;">' + err + '</li>';
+                });
+        }
+
+        function updateSessionsList() {
+            var htmlContent = '<thead>'
+                + '<tr style = "text-align: left;">'
+                + '<th>ID</th><th>Process</th><th>Resource</th><th>User</th>'
+                + '<th>Status</th><th>Start Time</th><th>End Time</th><th>Latest Stage</th></tr >'
+                + '</thead ><tbody>';
+            var color = '';
+            for (var i = 0; i < sessions.length; i++) {
+                switch (sessions[i].status) {
+                    case 'Completed':
+                        color = 'style="color:blue"';
+                        break;
+                    case 'Stopped':
+                        color = 'style="color:red"';
+                        break;
+                    case 'Terminated':
+                        color = 'style="color:black"';
+                        break;
+                    case 'Pending':
+                        color = 'style="color:orange"';
+                        break;
+                    default:
+                        color = 'style="color:green"';
+                        break;
+                }
+                htmlContent += '<tr onclick="selectItem(this)" ' + color + '>';
+                htmlContent += '<td>' + sessions[i].number + '</td>'
+                    + '<td>' + sessions[i].process + '</td>'
+                    + '<td>' + sessions[i].resource + '</td>'
+                    + '<td>' + sessions[i].user + '</td>'
+                    + '<td>' + sessions[i].status + '</td>'
+                    + '<td>' + sessions[i].startTime.replace('T', ' ') + '</td>'
+                    + '<td>' + (sessions[i].endTime == null ? '' : sessions[i].endTime.replace('T', ' ')) + '</td>'
+                    + '<td>' + (sessions[i].latestStage == null ? '' : sessions[i].latestStage) + '</td></tr>';
+            }
+            htmlContent += '</tbody>';
+            document.getElementById("sessions-table").innerHTML = htmlContent;
+        }
+        function getSessions() {
+            document.getElementById("sessions-table").innerHTML = '<tr><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></tr>';
+            fetch(apiUrlBase + "environment", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                }
+            }).then(res => res.json())
+                .then(data => {
+                    sessions = data;
+                    updateSessionsList();
+                })
+                .catch(err => {
+                    document.getElementById("sessions-table").innerHTML = '<tbody><tr style="color:red;"><td>' + err + '</td></tbody></tr>';
+                });
+        }
+
+
+        initConnectionsList();
     </script>
 </body>
 </html>
