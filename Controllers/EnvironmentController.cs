@@ -62,7 +62,7 @@ namespace BPControlRoomWebAPI.Controllers
             executor.SetParams(authParams.ConnectionName, authParams.Username, authParams.GetPasswordAsString(), sessionId);
             await executor.ExecuteAsync();
 
-            return executor.ExecutedSuccessfully ? "Successful" : executor.ExecutionResult;
+            return executor.ExecutedSuccessfully ? "Success " : executor.ExecutionResult;
         }
 
         private IAutomatecExecutable GetExecutor<T>() where T: IAutomatecExecutable, new()

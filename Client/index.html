@@ -4,6 +4,11 @@
     <link rel="icon" href="Images/favicon.png">
     <title>BP Web Control Room</title>
     <style>
+        html,
+        body {
+            margin: 0px;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -16,7 +21,6 @@
             background-color: rgb(0,0,0);
             background-color: rgba(0,0,0,0.4);
         }
-
         .modal-content {
             background-color: #fefefe;
             margin: 15% auto;
@@ -24,49 +28,59 @@
             border: 1px solid #888;
             width: 60%;
         }
-
         .close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
-
         .close:hover,
         .close:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
-        /*####################################*/
-        html,
-        body {
-            margin: 0px;
+
+        #sessions-context-menu {
+            position: fixed;
+            z-index: 10000;
+            width: 150px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            border: 1px solid black;
+            font-family: "Open Sans", sans-serif;
+            display: none;
         }
-        /*####################################*/
-        /* Remove default bullets */
+        #sessions-context-menu.visible {
+            display: block;
+        }
+        #sessions-context-menu .item {
+            padding: 8px 10px;
+            font-size: 15px;
+            color: #111;
+            cursor: pointer;
+            border-radius: inherit;
+        }
+        #sessions-context-menu .item:hover {
+            background: #90c8f6;
+        }
+
         ul, .items-list {
             list-style-type: none;
             width: max-content;
         }
-
-        /* Remove margins and padding from the parent ul */
         .items-list, #control-items-list {
             margin: 0;
             padding: 0;
         }
-
         ul {
             padding-left: 40px;
         }
 
-        /* Style the caret/arrow */
         .caret {
             cursor: default;
             user-select: none; /* Prevent text selection */
         }
-
-        /* Create the caret/arrow with a unicode, and style it */
         .caret::before {
             content: "\229E";
             color: black;
@@ -74,21 +88,16 @@
             margin-right: 6px;
             font-size:10px;
         }
-
-        /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
         .caret-down::before {
             content: "\229F";
         }
-
-        /* Hide the nested list */
         .nested {
             display: none;
         }
-
-        /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
         .active {
             display: block;
         } 
+
         .simple {
             cursor:default;
             user-select:none;
@@ -114,7 +123,6 @@
             min-width: 100%;
             user-select: none;
         }
-
         th {
             border-right: 1px solid #a0a0a0;
             padding: 2px 5px 2px 5px;
@@ -124,14 +132,12 @@
             top: 0px;
             background: #f6f6f6
         }
-
         td {
             padding: 2px 5px 2px 5px;
             white-space: nowrap;
             overflow: hidden;
             border: none;
         }
-
         tr {
             cursor: default;
         }
@@ -162,20 +168,23 @@
         }
     </style>
 </head>
-<body>
+<body onclick="clickContextMenuHandler(event)" oncontextmenu="((e) => e.preventDefault())(event)">
     <div id="modal-window" class="modal">
         <div class="modal-content">
             <p>
                 <label for="api-url">
                     BP Control room web API URL:
                 </label>
-                <input type="text" id="api-url" size="50"/>
+                <input type="text" id="api-url" size="50" />
                 <br /><br />
                 <div style="display: flex; width: 100%; align-items: center; justify-content: space-around;">
                     <button id="btn-apply-settings" onclick="applySettings()">Apply</button>
                 </div>
             </p>
         </div>
+    </div>
+    <div id="sessions-context-menu" onclick="selectMenuOptionHandler(event)">
+        <div class="item" onclick="stopSession()">Request Stop</div>
     </div>
     <div style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column">
         <div id="sign-in-view" style="background-color: #f0f0f0; display: flex; justify-content: space-around;flex-grow:1">
@@ -214,31 +223,6 @@
                 </div>
                 <div style="padding:10px; flex-grow:1; font-size:small">
                     <ul id="control-items-list">
-                        <li id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;" onclick="selectItem(this); openSessionManagement()">
-                            <img src="Images/Session_mngmt.png" />Session Management
-                        </li>
-                        <li>
-                            <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Queue_mngmt.png" />Queue Management</span>
-                            <ul class="nested">
-                                <li class="simple" onclick="selectItem(this); openQueueManagement()">
-                                    <img src="Images/Wq.png" />Test Work Queue
-                                </li>
-                                <li>
-                                    <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Folder.png" />My Work Queues Group</span>
-                                    <ul class="nested">
-                                        <li class="simple" onclick="selectItem(this); openQueueManagement()">
-                                            <img src="Images/Wq.png" />Parent Items Queue
-                                        </li>
-                                        <li class="simple" onclick="selectItem(this); openQueueManagement()">
-                                            <img src="Images/Wq.png" />Child Items Queue
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li class="simple" onclick="selectItem(this); openQueueManagement()">
-                                    <img src="Images/Wq.png" />Queue 1
-                                </li>
-                            </ul>
-                        </li>
                     </ul>
                 </div>
             </div>
@@ -248,7 +232,7 @@
                     <div>Sessions - Control currently running sessions</div>
                     <div><img id="sessions-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png" title="Refresh" onclick="getResources(); getSessions()" /></div>
                 </div>
-                <div id="top-right-views-container" style="flex-grow:1; width: 100%; display:flex; flex-direction:row; min-height:0;">
+                <div id="top-right-views-container" style="flex-grow:1; width: 100%; display:flex; flex-direction:row; min-height:0; max-height:50%;">
                     <div id="available-processes-view" style="height: 100%; max-width: 50%; flex-grow: 1; display: flex; flex-direction:column;">
                         <div>
                             <b>Available processes</b>       - Drag and drop processes on to resources
@@ -260,41 +244,6 @@
                                 <div style="padding-left:10px">Description</div>
                             </div>
                             <ul class="items-list" id="processes-list">
-                                <li>
-                                    <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Folder.png" />Default</span>
-                                    <ul class="nested">
-                                        <li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)">
-                                            <div style="display:flex; flex-direction:row;">
-                                                <div style="width:300px; overflow:hidden;">
-                                                    <img src="Images/Process.png" />Process One
-                                                </div>
-                                                <div style="width:max-content; overflow:hidden;">
-                                                    Lorem ipsum blah blah blah
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)">
-                                            <div style="display:flex; flex-direction:row;">
-                                                <div style="width:300px; overflow:hidden;">
-                                                    <img src="Images/Process.png" />Process Two
-                                                </div>
-                                                <div style="width:max-content; overflow:hidden;">
-                                                    Lorem ipsum blah blah blah
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)">
-                                            <div style="display:flex; flex-direction:row;">
-                                                <div style="width:300px; overflow:hidden;">
-                                                    <img src="Images/Process.png" />Process Three
-                                                </div>
-                                                <div style="width:max-content; overflow:hidden;">
-                                                    Lorem ipsum blah blah blah
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
                             </ul>
                         </div>
                     </div>
@@ -309,31 +258,6 @@
                                 <div style="padding-left:10px">State</div>
                             </div>
                             <ul class="items-list" id="resources-list">
-                                <li>
-                                    <span class="caret" onclick="handleCaretClick(this)"><img src="Images/Folder.png" />Default</span>
-                                    <ul class="nested">
-                                        <li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(this)">
-                                            <div style="display:flex; flex-direction:row;">
-                                                <div style="width:200px; overflow:hidden;">
-                                                    <img src="Images/Idle_rr.png" />Resource One
-                                                </div>
-                                                <div style="width:max-content; overflow:hidden;">
-                                                    Idle
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(this)">
-                                            <div style="display:flex; flex-direction:row;">
-                                                <div style="width:200px; overflow:hidden;">
-                                                    <img src="Images/Busy_rr.png" />Resource Two
-                                                </div>
-                                                <div style="width:max-content; overflow:hidden;">
-                                                    Working
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
                             </ul>
                         </div>
                     </div>
@@ -348,40 +272,6 @@
                     <div style="flex-grow:1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                         <div style="height:100%">
                             <table id="sessions-table">
-                                <thead>
-                                    <tr style="text-align: left;">
-                                        <th>ID</th>
-                                        <th>Process</th>
-                                        <th>Resource</th>
-                                        <th>User</th>
-                                        <th>Status</th>
-                                        <th>Start Time</th>
-                                        <th>End Time</th>
-                                        <th>Latest Stage</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr onclick="selectItem(this)">
-                                        <td>3376</td>
-                                        <td>Process One</td>
-                                        <td>Resource Two</td>
-                                        <td>admin</td>
-                                        <td>Processing</td>
-                                        <td>8/21/2023 12:18:50 PM</td>
-                                        <td></td>
-                                        <td>Validate Parameters</td>
-                                    </tr>
-                                    <tr onclick="selectItem(this)">
-                                        <td>3375</td>
-                                        <td>Process One</td>
-                                        <td>Resource Two</td>
-                                        <td>admin</td>
-                                        <td>Completed</td>
-                                        <td>8/21/2023 12:00:42 PM</td>
-                                        <td>8/21/2023 12:06:18 PM</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -390,7 +280,7 @@
             <div id="queue-management-views" style="height:100%; width:80%; display:none; flex-direction:column;">
                 <div style="height: 40px; line-height: 40px; padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: large; display: flex; justify-content: space-between;">
                     <div>Queues</div>
-                    <div><img id="queues-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png" title="Refresh" /></div>
+                    <div><img id="queues-refresh" style="min-height: 30px; margin: 5px 10px 0 0;" src="Images/Btn_refresh.png" title="Refresh" onclick="getQueueItems(null)" /></div>
                 </div>
                 <div id="queue-view" style="flex-grow: 2; max-height: 40%; min-height: 0; display: flex; flex-direction: column">
                     <div id="queues-title" style="font-size:smaller; margin-left:5px;">
@@ -398,98 +288,15 @@
                     </div>
                     <div style="flex-grow: 1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                         <table id="work-queues-table">
-                            <thead>
-                                <tr style="text-align: left;">
-                                    <th>Queue Name</th>
-                                    <th>Status</th>
-                                    <th>Worked</th>
-                                    <th>Pending</th>
-                                    <th>Referred</th>
-                                    <th>Total</th>
-                                    <th>Average Case Duration</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr onclick="selectItem(this)">
-                                    <td><img src="Images/Queue_paused.png" /> Queue 1</td>
-                                    <td>Paused</td>
-                                    <td>7</td>
-                                    <td>2</td>
-                                    <td>5</td>
-                                    <td>14</td>
-                                    <td>00:13</td>
-                                </tr>
-                                <tr onclick="selectItem(this)">
-                                    <td><img src="Images/Queue_running.png" /> Queue 2</td>
-                                    <td>Running</td>
-                                    <td>16</td>
-                                    <td>0</td>
-                                    <td>4</td>
-                                    <td>20</td>
-                                    <td>00:05</td>
-                                </tr>
-                            </tbody>
                         </table>
                     </div>
                 </div>
                 <div id="queue-items-view" style="flex-grow: 3; max-height: 60%; min-height: 0; display: flex; flex-direction: column">
-                    <div style="font-size: smaller; margin-left: 5px;">
-                        <b>Queue contents</b>
+                    <div id="queue-items-title" style="font-size: smaller; margin-left: 5px;">
+                        <b>Queue contents: </b>
                     </div>
                     <div style="flex-grow: 1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                         <table id="work-items-table">
-                            <thead>
-                                <tr style="text-align: left;">
-                                    <th></th>
-                                    <th style="min-width:60px;">Item Key</th>
-                                    <th>Priority</th>
-                                    <th>Status</th>
-                                    <th>Tags</th>
-                                    <th>Resource</th>
-                                    <th>Attempt</th>
-                                    <th>Created</th>
-                                    <th>Last Updated</th>
-                                    <th>Next Review</th>
-                                    <th>Completed</th>
-                                    <th>Total Work Time</th>
-                                    <th>Exception Date</th>
-                                    <th>Exception Reason</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr onclick="selectItem(this)">
-                                    <td><img src="Images/Item_done.png" /></td>
-                                    <td>5</td>
-                                    <td>0</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>Resource Two</td>
-                                    <td>1</td>
-                                    <td>3/22/2018 12:11:10 PM</td>
-                                    <td>3/22/2018 12:27:36 PM</td>
-                                    <td>3/22/2018 12:24:27 PM</td>
-                                    <td>3/22/2018 12:27:36 PM</td>
-                                    <td>00:03</td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr onclick="selectItem(this)">
-                                    <td><img src="Images/Item_done.png" /></td>
-                                    <td>4</td>
-                                    <td>0</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td>Resource Two</td>
-                                    <td>1</td>
-                                    <td>3/22/2018 12:11:10 PM</td>
-                                    <td>3/22/2018 12:27:34 PM</td>
-                                    <td>3/22/2018 12:24:25 PM</td>
-                                    <td>3/22/2018 12:27:34 PM</td>
-                                    <td>00:04</td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -508,8 +315,12 @@
         </div>
     </div>
     <script type="text/javascript">
+        const REFRESH_TIMEOUT = 60;//sec; Feel free to adjust for your purposes, here or through settings modal dialog (TODO).
         let apiUrlBase = "https://localhost:44303/";
         let authToken = "";
+        let selectedQueueId = "", selectedSessionId = "";
+        let refreshTimerId = 0;
+        let queueManagementIsOpen = false, sessionsManagementIsOpen = false;
         let processes, resources, sessions, queues, queueItems;
 
         function openSettings() {
@@ -575,17 +386,34 @@
             getProcesses();
             getResources();
             getSessions();
+            getQueues();
         }
         function switchToAuthView() {
             document.getElementById("sign-in-view").style.display = "flex";
             document.getElementById("sign-out").style.display = "none";
             document.getElementById("main-views").style.display = "none";
+
+            sessionsManagementIsOpen = false;
+            queueManagementIsOpen = false;
+
+            clearTimeout(refreshTimerId);
         }
         function switchToPostAuthView() {
             document.getElementById("sign-in-view").style.display = "none";
             document.getElementById("sign-out").style.display = "flex";
             document.getElementById("main-views").style.display = "flex";
-            refreshAllSessionManagement();
+
+            openSessionManagement();
+            sessionsManagementIsOpen = true;
+            refreshTimerId = setInterval(() => {
+                if (sessionsManagementIsOpen) {
+                    getResources();
+                    getSessions();
+                }
+                if (queueManagementIsOpen) {
+                    //getQueueItems(null); It's more comfortable updating it manually by Refresh button
+                }
+            }, REFRESH_TIMEOUT * 1000);
         }
         function initConnectionsList() {
             var combobox = document.getElementById("select-connection");
@@ -601,11 +429,16 @@
             document.getElementById("queue-management-views").style.display = "none";
             document.getElementById("right-views-container").style.display = "flex";
 
+            sessionsManagementIsOpen = true;
+            queueManagementIsOpen = false;
             refreshAllSessionManagement();
         }
         function openQueueManagement() {
             document.getElementById("queue-management-views").style.display = "flex";
             document.getElementById("right-views-container").style.display = "none";
+
+            sessionsManagementIsOpen = false;
+            queueManagementIsOpen = true;
         }
 
         function handleCaretClick(elem) {
@@ -624,6 +457,9 @@
         }
 
         function dragStartHandler(e) {
+            var procName = e.target.children[0].children[0].children[1].innerHTML;
+            e.dataTransfer.setData("procName", procName);
+
             var img = new Image();
             img.src = "Images/Process.png";
             e.dataTransfer.setDragImage(img, -5, -5);
@@ -638,8 +474,12 @@
         function dragLeaveHandler(elem) {
             elem.classList.remove("dragged-over");
         }
-        function dropHandler(elem) {
-            elem.classList.remove("dragged-over");
+        function dropHandler(e) {
+            e.target.closest("li").classList.remove("dragged-over");
+
+            var procName = e.dataTransfer.getData("procName");
+            var resourceName = e.target.closest("li").children[0].children[0].innerText;
+            startSession(procName, resourceName);
         }
         function allowDrop(ev) {
             ev.preventDefault();
@@ -662,8 +502,8 @@
                     htmlContent += '<li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)" ondragend="dragEndHandler(event)">'
                         + '<div style = "display:flex; flex-direction:row;">'
                         + '<div style="width:300px; overflow:hidden;">'
-                        + '<img src="Images/Process.png" />' + processes[i].processes[j].processName
-                        + '</div><div style="width:max-content; overflow:hidden;">' + processes[i].processes[j].processDescription
+                        + '<img src="Images/Process.png" /><span>' + processes[i].processes[j].processName
+                        + '</span></div><div style="width:max-content; overflow:hidden;">' + processes[i].processes[j].processDescription
                         + '</div></div ></li >';
                 }
                 htmlContent += '</ul ></li >';
@@ -695,7 +535,7 @@
                     + resources[i].group
                     + '</span><ul class="nested">';
                 for (var j = 0; j < resources[i].resources.length; j++) {
-                    htmlContent += '<li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(this)">'
+                    htmlContent += '<li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(event)">'
                         + '<div style = "display:flex; flex-direction:row;' + (resources[i].resources[j].resourceStatus == "Idle" ? 'color:black;' : 'color:green;') + '">'
                         + '<div style="width:200px; overflow:hidden;">'
                         + '<img src="Images/' + (resources[i].resources[j].resourceStatus == "Idle" ? 'Idle_rr.png" />' : 'Busy_rr.png" />')
@@ -751,21 +591,21 @@
                         color = 'style="color:green"';
                         break;
                 }
-                htmlContent += '<tr onclick="selectItem(this)" ' + color + '>';
+                htmlContent += '<tr id="' + sessions[i].id + '" onclick="selectItem(this)" oncontextmenu="contextMenuHandler(event)" ' + color + '>';
                 htmlContent += '<td>' + sessions[i].number + '</td>'
                     + '<td>' + sessions[i].process + '</td>'
                     + '<td>' + sessions[i].resource + '</td>'
                     + '<td>' + sessions[i].user + '</td>'
                     + '<td>' + sessions[i].status + '</td>'
-                    + '<td>' + sessions[i].startTime.replace('T', ' ') + '</td>'
-                    + '<td>' + (sessions[i].endTime == null ? '' : sessions[i].endTime.replace('T', ' ')) + '</td>'
+                    + '<td>' + new Date(sessions[i].startTime).toISOString().split('.')[0].replace('T', ' ') + '</td>'
+                    + '<td>' + (sessions[i].endTime == null ? '' : new Date(sessions[i].endTime).toISOString().split('.')[0].replace('T', ' ')) + '</td>'
                     + '<td>' + (sessions[i].latestStage == null ? '' : sessions[i].latestStage) + '</td></tr>';
             }
             htmlContent += '</tbody>';
             document.getElementById("sessions-table").innerHTML = htmlContent;
         }
         function getSessions() {
-            document.getElementById("sessions-table").innerHTML = '<tr><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></tr>';
+            document.getElementById("sessions-table").innerHTML = '<tr><td><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></td></tr>';
             fetch(apiUrlBase + "environment", {
                 method: "GET",
                 headers: {
@@ -777,10 +617,208 @@
                     updateSessionsList();
                 })
                 .catch(err => {
-                    document.getElementById("sessions-table").innerHTML = '<tbody><tr style="color:red;"><td>' + err + '</td></tbody></tr>';
+                    document.getElementById("sessions-table").innerHTML = '<tbody><tr style="color:red;"><td>' + err + '</td></tr></tbody>';
+                });
+        }
+        function startSession(process, resource) {
+            var data = {
+                ProcessName: process,
+                ResourceName: resource
+            };
+            fetch(apiUrlBase + "environment", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            }).then(res => res.text())
+                .then(text => {
+                    if (text.startsWith("Success")) {
+                        getResources();
+                        getSessions();
+                    }
+                    else {
+                        alert(text);
+                    }
+                })
+                .catch(err => {
+                    alert(err);
+                });
+        }
+        function stopSession() {
+            document.getElementById("sessions-context-menu").classList.remove("visible");
+
+            fetch(apiUrlBase + "environment/" + selectedSessionId, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + authToken
+                }
+            }).then(res => res.text())
+                .then(text => {
+                    if (text.startsWith("Success")) {
+                        getResources();
+                        getSessions();
+                    }
+                    else {
+                        alert(text);
+                    }
+                })
+                .catch(err => {
+                    alert(err);
                 });
         }
 
+        function updateQueuesList() {
+            var htmlContent = '<li id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;" onclick="selectItem(this); openSessionManagement()">'
+                + '<img src = "Images/Session_mngmt.png" /> Session Management'
+                + '</li ><li><span class="caret" onclick="handleCaretClick(this)"><img src="Images/Queue_mngmt.png" />Queue Management</span>'
+                + '<ul class="nested">';
+            for (var i = 0; i < queues.length; i++) {
+                if (queues[i].group != null) {
+                    htmlContent += '<li><span class="caret" onclick = "handleCaretClick(this)" > <img src="Images/Folder.png" />'
+                        + queues[i].group + '</span>'
+                        + '<ul class="nested">';
+                    for (var j = 0; j < queues[i].workQueues.length; j++) {
+                        htmlContent += '<li id="' + queues[i].workQueues[j].id +
+                            '" class="simple" onclick="selectItem(this); updateQueuesTable(this); getQueueItems(this); openQueueManagement()">'
+                            + '<img src="Images/Wq.png" />'
+                            + queues[i].workQueues[j].workQueueName + '</li>';
+                    }
+                    htmlContent += '</ul></li>';
+                }
+                else {
+                    for (var j = 0; j < queues[i].workQueues.length; j++) {
+                        htmlContent += '<li id="' + queues[i].workQueues[j].id +
+                            '" class="simple" onclick="selectItem(this); updateQueuesTable(this); getQueueItems(this); openQueueManagement()">'
+                            + '<img src="Images/Wq.png" />'
+                            + queues[i].workQueues[j].workQueueName + '</li>';
+                    }
+                }
+            }
+            htmlContent += '</ul></li>';
+            document.getElementById("control-items-list").innerHTML = htmlContent;
+        }
+        function getQueues() {
+            document.getElementById("control-items-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></tr>';
+            fetch(apiUrlBase + "queuemanagement", {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                }
+            }).then(res => res.json())
+                .then(data => {
+                    queues = data;
+                    updateQueuesList();
+                    expandTreeView("control-items-list");
+                    document.getElementById("session-management").classList.toggle("selected");
+                })
+                .catch(err => {
+                    document.getElementById("control-items-list").innerHTML = '<li style="color:red;">' + err + '</li>';
+                });
+        }
+        function updateQueuesTable(elem) {
+            var queueId = elem.id;
+            var queuesGroup = queues.filter((g) => g.workQueues.filter((q) => q.id == queueId).length == 1);
+            document.getElementById("queues-title").innerHTML = '<b>' + queuesGroup[0].workQueues.length + ' queues</b>';
+            var htmlContent = '<thead><tr style="text-align: left;">'
+                + '<th>Queue Name</th><th>Status</th><th>Worked</th><th>Pending</th>'
+                + '<th>Referred</th><th>Total</th><th>Average Case Duration</th></tr></thead><tbody>';
+            for (var i = 0; i < queuesGroup[0].workQueues.length; i++) {
+                htmlContent += '<tr id="' + queuesGroup[0].workQueues[i].id + '" onclick="selectItem(this);  getQueueItems(this);">'
+                    + '<td><img src="Images/' + (queuesGroup[0].workQueues[i].status == "Running" ? 'Queue_running.png' : 'Queue_paused.png') + '" /> '
+                    + queuesGroup[0].workQueues[i].workQueueName + '</td>'
+                    + '<td>' + queuesGroup[0].workQueues[i].status + '</td>'
+                    + '<td>' + queuesGroup[0].workQueues[i].workedItems + '</td>'
+                    + '<td>' + queuesGroup[0].workQueues[i].pendingItems + '</td>'
+                    + '<td>' + queuesGroup[0].workQueues[i].referredItems + '</td>'
+                    + '<td>' + queuesGroup[0].workQueues[i].totalItems + '</td>'
+                    + '<td>' + (queuesGroup[0].workQueues[i].averageCaseDuration == null ? '' : new Date(queuesGroup[0].workQueues[i].averageCaseDuration * 1000).toISOString().slice(11, 19)) + '</td></tr>';
+            }
+            htmlContent += '</tbody>';
+            document.getElementById("work-queues-table").innerHTML = htmlContent;
+        }
+
+        function updateQueueItemsTable() {
+            var htmlContent = '<thead><tr style = "text-align: left;" >'
+                + '<th></th><th style="min-width:60px;">Item Key</th><th>Priority</th><th>Status</th>'
+                + '<th>Tags</th><th>Resource</th><th>Attempt</th><th>Created</th><th>Last Updated</th>'
+                + '<th>Next Review</th><th>Completed</th><th>Total Work Time</th><th>Exception Date</th>'
+                + '<th>Exception Reason</th></tr></thead><tbody>';
+            for (var i = 0; i < queueItems.length; i++) {
+                var imageFile = "";
+                switch (queueItems[i].state) {
+                    case 'Exception':
+                        imageFile = "Item_exc.png";
+                        break;
+                    case 'Pending':
+                        imageFile = "Item_pending.png";
+                        break;
+                    case 'Completed':
+                        imageFile = "Item_done.png";
+                        break;
+                    default:
+                        imageFile = "Item_locked.png";
+                        break;
+                }
+                htmlContent += '<tr onclick="selectItem(this)">'
+                    + '<td><img src="Images/' + imageFile + '" /></td>'
+                    + '<td>' + queueItems[i].itemKey + '</td>'
+                    + '<td>' + queueItems[i].priority + '</td>'
+                    + '<td>' + queueItems[i].status + '</td>'
+                    + '<td>' + (queueItems[i].tag == null ? '' : queueItems[i].tag) + '</td>'
+                    + '<td>' + queueItems[i].resource + '</td>'
+                    + '<td>' + queueItems[i].attempt + '</td>'
+                    + '<td>' + new Date(queueItems[i].created).toISOString().split('.')[0].replace("T", " ") + '</td>'
+                    + '<td>' + (queueItems[i].lastUpdated == null ? '' : new Date(queueItems[i].lastUpdated).toISOString().split('.')[0].replace("T", " ")) + '</td>'
+                    + '<td>' + (queueItems[i].nextReview == null ? '' : new Date(queueItems[i].nextReview).toISOString().split('.')[0].replace("T", " ")) + '</td>'
+                    + '<td>' + (queueItems[i].completed == null ? '' : new Date(queueItems[i].completed).toISOString().split('.')[0].replace("T", " ")) + '</td>'
+                    + '<td>' + new Date(queueItems[i].totalWorkTime * 1000).toISOString().slice(11, 19) + '</td>'
+                    + '<td>' + (queueItems[i].exceptionDate == null ? '' : new Date(queueItems[i].exceptionDate).toISOString().split('.')[0].replace("T", " ")) + '</td>'
+                    + '<td>' + (queueItems[i].exceptionReason == null ? '' : queueItems[i].exceptionReason) + '</td></tr>';
+            }
+            htmlContent += '</tbody>';
+            document.getElementById("work-items-table").innerHTML = htmlContent;
+        }
+        function getQueueItems(elem) {
+            selectedQueueId = (elem == null ? selectedQueueId : elem.id);
+            document.getElementById("work-items-table").innerHTML = '<tr><td><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></td></tr>';
+            fetch(apiUrlBase + "queuecontents/" + selectedQueueId, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                }
+            }).then(res => res.json())
+                .then(data => {
+                    queueItems = data;
+                    var queueName = queues.filter((g) => g.workQueues.filter((q) => q.id == selectedQueueId).length == 1)[0].workQueues.filter((q) => q.id == selectedQueueId)[0].workQueueName;
+                    document.getElementById("queue-items-title").innerHTML = '<b>Queue contents: ' + queueName + '</b>';
+                    updateQueueItemsTable();
+                })
+                .catch(err => {
+                    document.getElementById("work-items-table").innerHTML = '<tbody><tr style="color:red;"><td>' + err + '</td></tr></tbody>';
+                });
+        }
+
+        function contextMenuHandler(e) {
+            e.preventDefault();
+            selectedSessionId = e.target.closest("tr").id;
+            var sessionStatus = sessions.filter((s) => s.id == selectedSessionId)[0].status;
+            if (sessionStatus != "Running")
+                return;
+
+            var contextMenu = document.getElementById("sessions-context-menu");
+            const { clientX: mouseX, clientY: mouseY } = e;
+            contextMenu.style.top = mouseY + 'px';
+            contextMenu.style.left = mouseX + 'px';
+            contextMenu.classList.add("visible");
+        }
+        function clickContextMenuHandler(e) {
+            var contextMenu = document.getElementById("sessions-context-menu");
+            if (e.target.offsetParent != contextMenu) {
+                contextMenu.classList.remove("visible");
+            }
+        }
 
         initConnectionsList();
     </script>

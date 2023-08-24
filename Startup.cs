@@ -31,6 +31,8 @@ namespace BPControlRoomWebAPI
 
         public IConfiguration Configuration { get; }
 
+        private const string CORS_ENABLE_POLICY = "cors_enable";
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -68,7 +70,7 @@ namespace BPControlRoomWebAPI
             services.AddControllers();
             services.AddCors(options =>
             {
-                options.AddPolicy("cors_enable", policy =>
+                options.AddPolicy(CORS_ENABLE_POLICY, policy =>
                 {
                     policy.AllowAnyOrigin()
                           .AllowAnyMethod()
@@ -92,7 +94,7 @@ namespace BPControlRoomWebAPI
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseCors("cors_enable");
+            app.UseCors(CORS_ENABLE_POLICY);
 
             app.UseEndpoints(endpoints =>
             {

@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace BPControlRoomWebAPI.Controllers
 {
-    [Route("[controller]")]
     [ApiController]
     [Authorize]
     public class QueueContentsController : ControllerBase
@@ -26,9 +25,11 @@ namespace BPControlRoomWebAPI.Controllers
         }
 
         [HttpGet]
+        [Route("[controller]/{queueId}")]
         public async Task<IEnumerable<BPQueueItem>> Get(Guid queueId)
         {
             return await db.BPQueueItems.Where(item => item.QueueId == queueId)
+                                        .OrderByDescending(item => item.Created)
                                         .ToArrayAsync();
         }
     }

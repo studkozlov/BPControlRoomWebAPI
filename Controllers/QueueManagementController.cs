@@ -36,6 +36,7 @@ namespace BPControlRoomWebAPI.Controllers
             var workQueues = await db.BPWorkQueues.ToListAsync();
             return workQueues.GroupBy(wq => wq.WorkQueueGroupName)
                              .Select(g => new GroupOfWorkQueues { Group = g.Key, WorkQueues = g.ToList() })
+                             .OrderByDescending(g => g.Group)
                              .ToArray();
         }
     }
