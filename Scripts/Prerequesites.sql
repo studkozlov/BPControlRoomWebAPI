@@ -15,7 +15,7 @@ GO
 /*Create 5 new views, each with a prefix cstm_*/
 CREATE VIEW [dbo].[cstm_BPVAvailableProcesses]
 AS
-SELECT        TOP (100) PERCENT dbo.BPAProcess.processid AS ProcessId, dbo.BPAProcess.name AS ProcessName, dbo.BPAProcess.description AS ProcessDescription, dbo.BPAGroup.name AS GroupName
+SELECT        dbo.BPAProcess.processid AS ProcessId, dbo.BPAProcess.name AS ProcessName, dbo.BPAProcess.description AS ProcessDescription, dbo.BPAGroup.name AS GroupName
 FROM            dbo.BPAProcess INNER JOIN
                          dbo.BPAGroupProcess ON dbo.BPAProcess.processid = dbo.BPAGroupProcess.processid INNER JOIN
                          dbo.BPAGroup ON dbo.BPAGroupProcess.groupid = dbo.BPAGroup.id
@@ -24,7 +24,7 @@ GO
 
 CREATE VIEW [dbo].[cstm_BPVEnvironment]
 AS
-SELECT        TOP (1000) dbo.BPASession.sessionid AS SessionId, dbo.BPASession.sessionnumber AS ID, dbo.BPAProcess.name AS Process, dbo.BPAResource.name AS 'Resource', dbo.BPAUser.username AS 'User', 
+SELECT        dbo.BPASession.sessionid AS SessionId, dbo.BPASession.sessionnumber AS ID, dbo.BPAProcess.name AS Process, dbo.BPAResource.name AS 'Resource', dbo.BPAUser.username AS 'User', 
                          dbo.BPAStatus.description AS 'Status', dbo.BPASession.startdatetime AS StartTime, dbo.BPASession.enddatetime AS EndTime, dbo.BPASession.laststage AS LatestStage
 FROM            dbo.BPASession INNER JOIN
                          dbo.BPAProcess ON dbo.BPAProcess.processid = dbo.BPASession.processid INNER JOIN
@@ -36,17 +36,18 @@ GO
 
 CREATE VIEW [dbo].[cstm_BPVQueueContents]
 AS
-SELECT        TOP (1000) dbo.BPAWorkQueueItem.id AS QueueItemId, CASE WHEN [lockid] IS NOT NULL THEN 'Locked' WHEN [completed] IS NULL AND [exception] IS NULL THEN 'Pending' WHEN [completed] IS NOT NULL AND 
+SELECT        dbo.BPAWorkQueueItem.id AS QueueItemId, CASE WHEN dbo.BPACaseLock.locktime IS NOT NULL THEN 'Locked' WHEN [completed] IS NULL AND [exception] IS NULL THEN 'Pending' WHEN [completed] IS NOT NULL AND 
                          [exception] IS NULL THEN 'Completed' ELSE 'Exception' END AS State, dbo.BPAWorkQueueItem.queueid, dbo.BPAWorkQueueItem.keyvalue AS ItemKey, dbo.BPAWorkQueueItem.priority, dbo.BPAWorkQueueItem.status,
-                             (SELECT        dbo.BPATag.tag+';'
+                             (SELECT        dbo.BPATag.tag + ';'
                                FROM            dbo.BPATag INNER JOIN
-                                                         dbo.BPAWorkQueueItemTag ON dbo.BPAWorkQueueItemTag.tagid = dbo.BPATag.id 
-                               WHERE        (dbo.BPAWorkQueueItemTag.queueitemident = dbo.BPAWorkQueueItem.ident) FOR XML PATH('')) AS Tag, dbo.BPAResource.name AS Resource, dbo.BPAWorkQueueItem.attempt, dbo.BPAWorkQueueItem.loaded AS Created, 
-                         dbo.BPAWorkQueueItem.lastupdated, dbo.BPAWorkQueueItem.deferred AS NextReview, dbo.BPAWorkQueueItem.completed, dbo.BPAWorkQueueItem.worktime AS TotalWorkTime, 
-                         dbo.BPAWorkQueueItem.exception AS ExceptionDate, dbo.BPAWorkQueueItem.exceptionreason
-FROM            dbo.BPAWorkQueueItem INNER JOIN
+                                                         dbo.BPAWorkQueueItemTag ON dbo.BPAWorkQueueItemTag.tagid = dbo.BPATag.id
+                               WHERE        (dbo.BPAWorkQueueItemTag.queueitemident = dbo.BPAWorkQueueItem.ident) FOR XML PATH('')) AS Tag, dbo.BPAResource.name AS Resource, dbo.BPAWorkQueueItem.attempt, 
+                         dbo.BPAWorkQueueItem.loaded AS Created, dbo.BPAWorkQueueItem.lastupdated, dbo.BPAWorkQueueItem.deferred AS NextReview, dbo.BPAWorkQueueItem.completed, dbo.BPAWorkQueueItem.worktime AS TotalWorkTime, 
+                         dbo.BPAWorkQueueItem.exception AS ExceptionDate, dbo.BPAWorkQueueItem.exceptionreason                                                                                                                                                                                                                                                         
+ FROM            dbo.BPAWorkQueueItem INNER JOIN
                          dbo.BPASession ON dbo.BPASession.sessionid = dbo.BPAWorkQueueItem.sessionid INNER JOIN
-                         dbo.BPAResource ON dbo.BPAResource.resourceid = dbo.BPASession.runningresourceid
+                         dbo.BPAResource ON dbo.BPAResource.resourceid = dbo.BPASession.runningresourceid LEFT JOIN
+                         dbo.BPACaseLock ON dbo.BPACaseLock.id = dbo.BPAWorkQueueItem.ident
 GO
 
 CREATE VIEW [dbo].[cstm_BPVQueueManagement]
