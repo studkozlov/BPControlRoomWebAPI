@@ -31,7 +31,6 @@ FROM            dbo.BPASession INNER JOIN
                          dbo.BPAResource ON dbo.BPAResource.resourceid = dbo.BPASession.runningresourceid INNER JOIN
                          dbo.BPAUser ON dbo.BPAUser.userid = dbo.BPASession.starteruserid INNER JOIN
                          dbo.BPAStatus ON dbo.BPAStatus.statusid = dbo.BPASession.statusid
-ORDER BY StartTime DESC
 GO
 
 CREATE VIEW [dbo].[cstm_BPVQueueContents]
@@ -75,8 +74,9 @@ GO
 
 CREATE VIEW [dbo].[cstm_BPVResources]
 AS
-SELECT        dbo.BPAResource.resourceid AS ResourceId, dbo.BPAResource.name AS ResourceName, dbo.BPAGroup.name AS ResourceGroupName, CASE WHEN [processesrunning] = 0 THEN 'Idle' WHEN [processesrunning] = 1 AND 
-                         [actionsrunning] = 0 THEN 'Idle-Pending' ELSE 'Busy' END AS ResourceStatus
+SELECT        dbo.BPAResource.resourceid, dbo.BPAResource.name AS ResourceName, dbo.BPAGroup.name AS ResourceGroupName, CASE WHEN [DisplayStatus] IS NOT NULL AND 
+                         [DisplayStatus] <> 'Private' THEN [DisplayStatus] WHEN [processesrunning] = 0 THEN 'Idle' WHEN [processesrunning] = 1 AND 
+                         [actionsrunning] = 0 THEN 'Idle-Pending' ELSE 'Working' END AS ResourceStatus
 FROM            dbo.BPAResource INNER JOIN
                          dbo.BPAGroupResource ON dbo.BPAGroupResource.memberid = dbo.BPAResource.resourceid INNER JOIN
                          dbo.BPAGroup ON dbo.BPAGroup.id = dbo.BPAGroupResource.groupid
@@ -87,7 +87,7 @@ GO
 CREATE USER bpapiuser FOR LOGIN bpapiuser
 GO
 
-/*Grant readonly rights for 5 sctm_ views to created user*/
+/*Grant readonly rights for 5 cstm_ views to created user*/
 GRANT SELECT ON cstm_BPVAvailableProcesses TO bpapiuser
 GO
 

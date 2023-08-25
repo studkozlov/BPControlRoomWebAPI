@@ -307,7 +307,7 @@
                 <img src="Images/Sign_out.png" />
                 Sign Out
             </div>
-            <div style="display: flex; flex-direction: row-reverse; align-items: center; padding: 1px 5px; width:90%; color:white;font-size:20px;">
+            <div style="display: flex; flex-direction: row-reverse; align-items: center; padding: 1px 5px; flex-grow: 1; color:white;font-size:20px;">
                 <div id="settings" style="cursor:pointer;" onclick="openSettings()">
                     <span><b>&#9881;</b></span>
                 </div>
@@ -535,10 +535,28 @@
                     + resources[i].group
                     + '</span><ul class="nested">';
                 for (var j = 0; j < resources[i].resources.length; j++) {
+                    var imageFile = "", color = "color:black;";
+                    switch (resources[i].resources[j].resourceStatus) {
+                        case 'Idle':
+                            imageFile = "R_idle.png";
+                            break;
+                        case 'Idle-Pending':
+                        case 'Working':
+                            imageFile = "R_busy.png";
+                            color = "color:green;"
+                            break;
+                        case 'Logged Out':
+                            imageFile = "R_logged_out.png";
+                            break;
+                        default://Missing
+                            imageFile = "R_missing.png";
+                            color = "color:red;"
+                            break;
+                    }
                     htmlContent += '<li class="simple" ondragover="allowDrop(event)" onclick="selectItem(this)" ondragenter="dragEnterHandler(this)" ondragleave="dragLeaveHandler(this)" ondrop="dropHandler(event)">'
-                        + '<div style = "display:flex; flex-direction:row;' + (resources[i].resources[j].resourceStatus == "Idle" ? 'color:black;' : 'color:green;') + '">'
+                        + '<div style = "display:flex; flex-direction:row;' + color + '">'
                         + '<div style="width:200px; overflow:hidden;">'
-                        + '<img src="Images/' + (resources[i].resources[j].resourceStatus == "Idle" ? 'Idle_rr.png" />' : 'Busy_rr.png" />')
+                        + '<img src="Images/' + imageFile + '">'
                         + resources[i].resources[j].resourceName
                         + '</div><div style="width:max-content; overflow:hidden;">'
                         + resources[i].resources[j].resourceStatus
