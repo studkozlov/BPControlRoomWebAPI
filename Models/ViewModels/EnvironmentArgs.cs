@@ -4,6 +4,7 @@
     {
         public string ProcessName { get; set; }
         public string ResourceName { get; set; }
+        public string InputParameters { get; set; }
         public string SessionId { get; set; }
     }
 }

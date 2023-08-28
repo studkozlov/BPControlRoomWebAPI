@@ -34,7 +34,8 @@ namespace BPControlRoomWebAPI.Infra.Classes
         /// <param name="args">args[0] - process name, args[1] - resource name</param>
         public void SetParams(string dbconname, string username, string password, params string[] args)
         {
-            InputParams = $"\"{args[0]}\" /resource {args[1]} /user {username} {password} /dbconname \"{dbconname}\"";
+            InputParams = $"\"{args[0]}\" /resource {args[1]} /user {username} {password} /dbconname \"{dbconname}\""
+                + (args[2] != null ? $" /startp \"{args[2]}\"" : string.Empty);
         }
         public void Execute()
         {

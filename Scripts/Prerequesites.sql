@@ -15,7 +15,7 @@ GO
 /*Create 5 new views, each with a prefix cstm_*/
 CREATE VIEW [dbo].[cstm_BPVAvailableProcesses]
 AS
-SELECT        dbo.BPAProcess.processid AS ProcessId, dbo.BPAProcess.name AS ProcessName, dbo.BPAProcess.description AS ProcessDescription, dbo.BPAGroup.name AS GroupName
+SELECT        dbo.BPAProcess.processid, dbo.BPAProcess.name AS ProcessName, dbo.BPAProcess.description AS ProcessDescription, LEFT(dbo.BPAProcess.processxml, 16384) AS ProcessInput, dbo.BPAGroup.name AS GroupName
 FROM            dbo.BPAProcess INNER JOIN
                          dbo.BPAGroupProcess ON dbo.BPAProcess.processid = dbo.BPAGroupProcess.processid INNER JOIN
                          dbo.BPAGroup ON dbo.BPAGroupProcess.groupid = dbo.BPAGroup.id

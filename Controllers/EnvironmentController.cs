@@ -47,7 +47,7 @@ namespace BPControlRoomWebAPI.Controllers
         {
             var authParams = new AuthenticationParams(User);
             var executor = GetExecutor<AutomatecRunProcessExecutor>();
-            executor.SetParams(authParams.ConnectionName, authParams.Username, authParams.GetPasswordAsString(), args.ProcessName, args.ResourceName);
+            executor.SetParams(authParams.ConnectionName, authParams.Username, authParams.GetPasswordAsString(), args.ProcessName, args.ResourceName, args.InputParameters);
             await executor.ExecuteAsync();
 
             return executor.ExecutedSuccessfully ? "Success " + executor.ExecutionResult : executor.ExecutionResult;

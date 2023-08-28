@@ -169,19 +169,37 @@
     </style>
 </head>
 <body onclick="clickContextMenuHandler(event)" oncontextmenu="((e) => e.preventDefault())(event)">
-    <div id="modal-window" class="modal">
+    <div id="modal-window-settings" class="modal">
         <div class="modal-content">
-            <p>
-                <label for="api-url">
-                    BP Control room web API URL:
-                </label>
-                <input type="text" id="api-url" size="50" />
-                <br /><br />
-                <div style="display: flex; width: 100%; align-items: center; justify-content: space-around;">
-                    <button id="btn-apply-settings" onclick="applySettings()">Apply</button>
-                </div>
-            </p>
+            <table>
+                <tr>
+                    <td>
+                        <label for="api-url">
+                            BP Control room web API URL:
+                        </label>
+                    </td>
+                    <td>
+                        <input type="text" id="api-url" size="50" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="refresh-frequency">
+                            Frequency of refresh, sec (min 30):
+                        </label>
+                    </td>
+                    <td>
+                        <input type="number" id="refresh-frequency" min="30" size="50" />
+                    </td>
+                </tr>
+            </table>
+            <br /><br />
+            <div style="display: flex; width: 100%; align-items: center; justify-content: space-around;">
+                <button id="btn-apply-settings" onclick="applySettings()">Apply</button>
+            </div>
         </div>
+    </div>
+    <div id="modal-window-inputs" class="modal">
     </div>
     <div id="sessions-context-menu" onclick="selectMenuOptionHandler(event)">
         <div class="item" onclick="stopSession()">Request Stop</div>
@@ -315,7 +333,7 @@
         </div>
     </div>
     <script type="text/javascript">
-        const REFRESH_TIMEOUT = 60;//sec; Feel free to adjust for your purposes, here or through settings modal dialog (TODO).
+        let REFRESH_TIMEOUT = 60;//sec; Feel free to adjust for your purposes, here or through settings modal dialog (TODO).
         let apiUrlBase = "https://localhost:44303/";
         let authToken = "";
         let selectedQueueId = "", selectedSessionId = "";
@@ -325,12 +343,22 @@
 
         function openSettings() {
             document.getElementById("api-url").value = apiUrlBase;
-            document.getElementById("modal-window").style.display = "block";
+            document.getElementById("refresh-frequency").value = REFRESH_TIMEOUT;
+            document.getElementById("modal-window-settings").style.display = "block";
         }
         function applySettings() {
             apiUrlBase = document.getElementById("api-url").value;
+            REFRESH_TIMEOUT = document.getElementById("refresh-frequency").value;
+            if (REFRESH_TIMEOUT < 30) {
+                REFRESH_TIMEOUT = 30;
+            }
+            if (queueManagementIsOpen || sessionsManagementIsOpen) {// restart timer with a new delay
+                clearTimeout(refreshTimerId);
+                refreshTimerId = setInterval(refreshViews, REFRESH_TIMEOUT * 1000);
+            }
+
             initConnectionsList();
-            document.getElementById("modal-window").style.display = "none";
+            document.getElementById("modal-window-settings").style.display = "none";
         }
         function logIn() {
             var data = {
@@ -370,7 +398,7 @@
             switchToAuthView();
         }
         window.onclick = function (event) {
-            var modal = document.getElementById("modal-window");
+            var modal = document.getElementById("modal-window-settings");
             if (event.target == modal) {
                 modal.style.display = "none";
             }
@@ -387,6 +415,15 @@
             getResources();
             getSessions();
             getQueues();
+        }
+        function refreshViews() {
+            if (sessionsManagementIsOpen) {
+                getResources();
+                getSessions();
+            }
+            if (queueManagementIsOpen) {
+                //getQueueItems(null); It's more comfortable updating it manually by Refresh button
+            }
         }
         function switchToAuthView() {
             document.getElementById("sign-in-view").style.display = "flex";
@@ -405,15 +442,7 @@
 
             openSessionManagement();
             sessionsManagementIsOpen = true;
-            refreshTimerId = setInterval(() => {
-                if (sessionsManagementIsOpen) {
-                    getResources();
-                    getSessions();
-                }
-                if (queueManagementIsOpen) {
-                    //getQueueItems(null); It's more comfortable updating it manually by Refresh button
-                }
-            }, REFRESH_TIMEOUT * 1000);
+            refreshTimerId = setInterval(refreshViews, REFRESH_TIMEOUT * 1000);
         }
         function initConnectionsList() {
             var combobox = document.getElementById("select-connection");
@@ -456,9 +485,12 @@
             elem.classList.toggle("selected");
         }
 
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
         function dragStartHandler(e) {
-            var procName = e.target.children[0].children[0].children[1].innerHTML;
-            e.dataTransfer.setData("procName", procName);
+            var procId = e.target.id;
+            e.dataTransfer.setData("procId", procId);
 
             var img = new Image();
             img.src = "Images/Process.png";
@@ -477,12 +509,79 @@
         function dropHandler(e) {
             e.target.closest("li").classList.remove("dragged-over");
 
-            var procName = e.dataTransfer.getData("procName");
+            var procId = e.dataTransfer.getData("procId");
+            var process = processes.map((g) => g.processes).flat().filter((p) => p.id == procId)[0];
             var resourceName = e.target.closest("li").children[0].children[0].innerText;
-            startSession(procName, resourceName);
+            if (process.processInput == "") {
+                startSession(process.processName, resourceName);
+            }
+            else {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(process.processInput, "application/xml");
+                var inputs = doc.querySelectorAll("input");
+                var htmlContent = '<div class="modal-content"><h2>Startup Parameters</h2><table>';
+                for (var i = 0; i < inputs.length; i++) {
+                    htmlContent += '<tr><td><label for= "' + inputs[i].getAttribute("name") + '">'
+                        + inputs[i].getAttribute("name") + '</label></td>'
+                        + '<td><input type="' + inputs[i].getAttribute("type").replace("datetime", "datetime-local").replace("flag", "checkbox")
+                        + '" id="' + inputs[i].getAttribute("name") + '" size="50" title="' + ((inputs[i].getAttribute("narrative")) ?? '') + '"/></td></tr>';
+                }
+                htmlContent += '</table><br/><br/><div style = "display: flex; width: 100%; align-items: center; justify-content: space-around;" >'
+                    + '<input type="hidden" id="input-process-name" value="' + process.processName + '" />'
+                    + '<input type="hidden" id="input-resource-name" value="' + resourceName + '" />'
+                    + '<button id="btn-apply-inputs" onclick="applyInputParams()">Start</button>'
+                    + '<button id="btn-cancel-start" onclick="document.getElementById(\'modal-window-inputs\').style.display = \'none\'">Cancel</button></div >';
+
+                var inputsWindow = document.getElementById("modal-window-inputs");
+                inputsWindow.innerHTML = htmlContent;
+                inputsWindow.style.display = "block";
+            }
         }
-        function allowDrop(ev) {
-            ev.preventDefault();
+        function applyInputParams() {
+            var inputs = document.querySelectorAll("#modal-window-inputs table input");
+            var startupParams = "<inputs>";
+            for (var i = 0; i < inputs.length; i++) {
+                switch (inputs[i].getAttribute("type")) {
+                    case 'date':
+                        if (inputs[i].value == '')
+                            break;
+                        startupParams += "<input name='" + inputs[i].id + "' type='date' value='" + inputs[i].value + "' />";
+                        break;
+                    case 'datetime-local':
+                        if (inputs[i].value == '')
+                            break;
+                        var date = new Date(inputs[i].value);
+                        startupParams += "<input name='" + inputs[i].id + "' type='datetime' value='" + inputs[i].value.replace('T', ' ') + ":00' />";
+                        break;
+                    case 'checkbox':
+                        startupParams += "<input name='" + inputs[i].id + "' type='flag' value='" + (inputs[i].checked ? 'True' : 'False') + "' />";
+                        break;
+                    case 'number':
+                        if (inputs[i].value == '')
+                            break;
+                        startupParams += "<input name='" + inputs[i].id + "' type='number' value='" + inputs[i].value + "' />";
+                        break;
+                    case 'password':
+                        if (inputs[i].value == '')
+                            break;
+                        startupParams += "<input name='" + inputs[i].id + "' type='password' value='" + inputs[i].value + "' />";
+                        break;
+                    case 'text':
+                        startupParams += "<input name='" + inputs[i].id + "' type='text' value='" + inputs[i].value + "' />";
+                        break;
+                    case 'time':
+                        if (inputs[i].value == '')
+                            break;
+                        startupParams += "<input name='" + inputs[i].id + "' type='time' value='" + inputs[i].value + "' />";
+                        break;
+                }
+            }
+            startupParams += "</inputs>";
+            var processName = document.getElementById("input-process-name").value;
+            var resourceName = document.getElementById("input-resource-name").value;
+            document.getElementById("modal-window-inputs").style.display = "none";
+
+            startSession(processName, resourceName, startupParams);
         }
 
         function expandTreeView(elemId) {
@@ -499,7 +598,7 @@
                     + processes[i].group
                     + '</span><ul class="nested">';
                 for (var j = 0; j < processes[i].processes.length; j++) {
-                    htmlContent += '<li class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)" ondragend="dragEndHandler(event)">'
+                    htmlContent += '<li id="' + processes[i].processes[j].id + '" class="simple" draggable="true" onclick="selectItem(this)" ondragstart="dragStartHandler(event)" ondragend="dragEndHandler(event)">'
                         + '<div style = "display:flex; flex-direction:row;">'
                         + '<div style="width:300px; overflow:hidden;">'
                         + '<img src="Images/Process.png" /><span>' + processes[i].processes[j].processName
@@ -638,10 +737,11 @@
                     document.getElementById("sessions-table").innerHTML = '<tbody><tr style="color:red;"><td>' + err + '</td></tr></tbody>';
                 });
         }
-        function startSession(process, resource) {
+        function startSession(process, resource, inputs = null) {
             var data = {
                 ProcessName: process,
-                ResourceName: resource
+                ResourceName: resource,
+                InputParameters: inputs
             };
             fetch(apiUrlBase + "environment", {
                 method: "POST",
@@ -809,7 +909,8 @@
             }).then(res => res.json())
                 .then(data => {
                     queueItems = data;
-                    var queueName = queues.filter((g) => g.workQueues.filter((q) => q.id == selectedQueueId).length == 1)[0].workQueues.filter((q) => q.id == selectedQueueId)[0].workQueueName;
+                    //var queueName = queues.filter((g) => g.workQueues.filter((q) => q.id == selectedQueueId).length == 1)[0].workQueues.filter((q) => q.id == selectedQueueId)[0].workQueueName;
+                    var queueName = queues.map((g) => g.workQueues).flat().filter((q) => q.id == selectedQueueId)[0].workQueueName;
                     document.getElementById("queue-items-title").innerHTML = '<b>Queue contents: ' + queueName + '</b>';
                     updateQueueItemsTable();
                 })
