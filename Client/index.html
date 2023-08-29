@@ -202,9 +202,10 @@
     <div id="modal-window-inputs" class="modal">
     </div>
     <div id="sessions-context-menu" onclick="selectMenuOptionHandler(event)">
-        <div class="item" onclick="stopSession()">Request Stop</div>
+        <div class="item" onclick="stopSession()" id="request-stop-option">Request Stop</div>
+        <div class="item" onclick="getLogItems()">View Log</div>
     </div>
-    <div style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column">
+    <div style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column;">
         <div id="sign-in-view" style="background-color: #f0f0f0; display: flex; justify-content: space-around;flex-grow:1">
             <div id="sign-in-details" style="background-color:white; width:60%; border: 1px solid black;margin:50px; padding: 10px;">
                 <h2>Sign in to Blue Prism</h2>
@@ -339,7 +340,7 @@
         let selectedQueueId = "", selectedSessionId = "";
         let refreshTimerId = 0;
         let queueManagementIsOpen = false, sessionsManagementIsOpen = false;
-        let processes, resources, sessions, queues, queueItems;
+        let processes = null, resources, sessions, queues = null, queueItems, logs;
 
         function openSettings() {
             document.getElementById("api-url").value = apiUrlBase;
@@ -395,6 +396,10 @@
         }
         function logOut() {
             authToken = "";
+            processes = null;
+            queues = null;
+            resources = null;
+            sessions = null;
             switchToAuthView();
         }
         window.onclick = function (event) {
@@ -411,10 +416,20 @@
         });
 
         function refreshAllSessionManagement() {
-            getProcesses();
+            if (queues == null) {
+                getQueues();
+            }
+            else {
+                updateQueuesList();
+            }
+            if (processes == null) {
+                getProcesses();
+            }
+            else {
+                updateProcessesList();
+            }
             getResources();
             getSessions();
-            getQueues();
         }
         function refreshViews() {
             if (sessionsManagementIsOpen) {
@@ -608,6 +623,8 @@
                 htmlContent += '</ul ></li >';
             }
             document.getElementById("processes-list").innerHTML = htmlContent;
+
+            expandTreeView("processes-list");
         }
         function getProcesses() {
             document.getElementById("processes-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></li>';
@@ -620,10 +637,10 @@
                 .then(data => {
                     processes = data;
                     updateProcessesList();
-                    expandTreeView("processes-list");
                 })
                 .catch(err => {
                     document.getElementById("processes-list").innerHTML = '<li style="color:red;">' + err + '</li>';
+                    processes = null;
                 });
         }
 
@@ -664,6 +681,8 @@
                 htmlContent += '</ul ></li >';
             }
             document.getElementById("resources-list").innerHTML = htmlContent;
+
+            expandTreeView("resources-list");
         }
         function getResources() {
             document.getElementById("resources-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></li>';
@@ -676,7 +695,6 @@
                 .then(data => {
                     resources = data;
                     updateResourcesList();
-                    expandTreeView("resources-list");
                 })
                 .catch(err => {
                     document.getElementById("resources-list").innerHTML = '<li style="color:red;">' + err + '</li>';
@@ -708,7 +726,7 @@
                         color = 'style="color:green"';
                         break;
                 }
-                htmlContent += '<tr id="' + sessions[i].id + '" onclick="selectItem(this)" oncontextmenu="contextMenuHandler(event)" ' + color + '>';
+                htmlContent += '<tr id="' + sessions[i].id + '" onclick="selectItem(this)" oncontextmenu="contextMenuHandler(event)" ' + color + ' ondblclick="selectedSessionId = this.id; getLogItems();">';
                 htmlContent += '<td>' + sessions[i].number + '</td>'
                     + '<td>' + sessions[i].process + '</td>'
                     + '<td>' + sessions[i].resource + '</td>'
@@ -816,6 +834,9 @@
             }
             htmlContent += '</ul></li>';
             document.getElementById("control-items-list").innerHTML = htmlContent;
+
+            expandTreeView("control-items-list");
+            document.getElementById("session-management").classList.toggle("selected");
         }
         function getQueues() {
             document.getElementById("control-items-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></tr>';
@@ -828,11 +849,10 @@
                 .then(data => {
                     queues = data;
                     updateQueuesList();
-                    expandTreeView("control-items-list");
-                    document.getElementById("session-management").classList.toggle("selected");
                 })
                 .catch(err => {
                     document.getElementById("control-items-list").innerHTML = '<li style="color:red;">' + err + '</li>';
+                    queues = null;
                 });
         }
         function updateQueuesTable(elem) {
@@ -919,12 +939,107 @@
                 });
         }
 
+        function openLog(id) {
+            var session = sessions.filter((s) => s.id == id)[0];
+            var htmlContent = '<html><head><title>Session Log Viewer</title><link rel="icon" href="Images/favicon.png">'
+                + '<style>td{border: 1px solid #eeeeee;padding: 2px 5px 2px 5px; white-space: nowrap; overflow: hidden;} '
+                + 'th{border-right: 1px solid #a0a0a0;padding: 2px 5px 2px 5px;white-space: nowrap;'
+                + 'overflow: hidden;position: sticky;top: 0px;background: #f6f6f6;}'
+                + 'span {white-space: nowrap;} </style > '
+                + '<scr'+ 'ipt type="text/javascript">function ChangeColor(tableRow, highLight) {if (highLight) {'
+                + 'tableRow.style.backgroundColor = "#92bafa";}else {tableRow.style.backgroundColor = "white";}}</scr' + 'ipt>'
+                + '</head><body style="margin: 0px;">';
+            htmlContent += '<div style="display: flex; flex-direction: column; width: 100%; height: 100%;">'
+                + '<div style="padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: medium; display:flex; flex-direction: column;">'
+                + '<p style="margin: 5px 0px;">Process: ' + session.process + '</p>'
+                + '<p style="margin: 5px 0px;">Session Date: ' + session.startTime.replace('T', ' ') + '</p></div>'
+                + '<div style="flex-grow:1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">'
+                + '<table style="border-spacing: 0; min-width: 100%;"><tr><th>Stage Name</th><th>Stage Type</th><th>Process</th><th>Page</th><th>Object</th>'
+                + '<th>Action</th><th>Result</th><th>Resource Start</th><th>Resource End</th><th>Parameters</th></tr>';
+            for (var i = 0; i < logs.length; i++) {
+                var parameters = "";
+                if (logs[i].parameters != "") {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(logs[i].parameters, "application/xml");
+                    var inputs = doc.querySelectorAll("input");
+                    for (var j = 0; j < inputs.length; j++) {
+                        if (inputs[j].getAttribute("type") != "collection") {
+                            parameters += "<span>(IN)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Name:</b><i>" + inputs[j].getAttribute("name") + "</i> <b>Value:</b><i>" + inputs[j].getAttribute("value") + "</i></span><br/>\n";
+                        }
+                        else {
+                            parameters += "<span>(IN)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>Name:</b><i>" + inputs[j].getAttribute("name") + "</i> (Collection)</span><br/>\n";
+                            var rows = inputs[j].querySelectorAll("row");
+                            for (var k = 0; k < rows.length; k++) {
+                                parameters += "<span>&nbsp;&nbsp;&nbsp;Row " + (k + 1) + ":</span><br/>\n";
+                                var fields = rows[k].querySelectorAll("field");
+                                for (var l = 0; l < fields.length; l++) {
+                                    parameters += "<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>" + fields[l].getAttribute("name") + ":</b><i>" + fields[l].getAttribute("value") + "</i></span><br/>\n";
+                                }
+                            }
+                        }
+                    }
+                    var outputs = doc.querySelectorAll("output");
+                    for (var j = 0; j < outputs.length; j++) {
+                        if (outputs[j].getAttribute("type") != "collection") {
+                            parameters += "<span>(OUT) <b>Name:</b><i>" + outputs[j].getAttribute("name") + "</i> <b>Value:</b><i>" + outputs[j].getAttribute("value") + "</i></span><br/>\n";
+                        }
+                        else {
+                            parameters += "<span>(OUT) <b>Name:</b><i>" + outputs[j].getAttribute("name") + "</i> (Collection)</span><br/>\n";
+                            var rows = outputs[j].querySelectorAll("row");
+                            for (var k = 0; k < rows.length; k++) {
+                                parameters += "<span>&nbsp;&nbsp;&nbsp;Row " + (k + 1) + ":</span><br/>\n";
+                                var fields = rows[k].querySelectorAll("field");
+                                for (var l = 0; l < fields.length; l++) {
+                                    parameters += "<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>" + fields[l].getAttribute("name") + ":</b><i>" + fields[l].getAttribute("value") + "</i></span><br/>\n";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                htmlContent += '<tr onmouseover="ChangeColor(this, true)" onmouseout="ChangeColor(this, false)"><td>' + logs[i].stageName + '</td>'
+                    + '<td>' + logs[i].stageType + '</td>'
+                    + '<td>' + logs[i].process + '</td>'
+                    + '<td>' + logs[i].page + '</td>'
+                    + '<td>' + logs[i].object + '</td>'
+                    + '<td>' + logs[i].action + '</td>'
+                    + '<td>' + logs[i].result + '</td>'
+                    + '<td>' + logs[i].resourceStart.replace('T', ' ') + '</td>'
+                    + '<td>' + (logs[i].resourceEnd == null ? '' : logs[i].resourceEnd.replace('T', ' ')) + '</td>'
+                    + '<td style="white-space: normal;">' + parameters + '</td></tr>';
+            }
+            htmlContent += '</table></div></div></body></html>';
+
+            var newWindow = window.open();
+            newWindow.document.write(htmlContent);
+        }
+        function getLogItems() {
+            document.getElementById("sessions-context-menu").classList.remove("visible");
+
+            var session = sessions.filter((s) => s.id == selectedSessionId)[0];
+            fetch(apiUrlBase + "logs/" + session.number, {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                }
+            }).then(res => res.json())
+                .then(data => {
+                    logs = data;
+                    openLog(session.id);
+                })
+                .catch(err => {
+                    alert(err);
+                });
+        }
+
         function contextMenuHandler(e) {
             e.preventDefault();
             selectedSessionId = e.target.closest("tr").id;
             var sessionStatus = sessions.filter((s) => s.id == selectedSessionId)[0].status;
             if (sessionStatus != "Running")
-                return;
+                document.getElementById("request-stop-option").style.display = "none";
+            else
+                document.getElementById("request-stop-option").style.display = "inherit";
 
             var contextMenu = document.getElementById("sessions-context-menu");
             const { clientX: mouseX, clientY: mouseY } = e;

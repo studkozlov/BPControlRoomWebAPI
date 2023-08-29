@@ -12,7 +12,7 @@ GO
 USE [BluePrism]
 GO
 
-/*Create 5 new views, each with a prefix cstm_*/
+/*Create 6 new views, each with a prefix cstm_*/
 CREATE VIEW [dbo].[cstm_BPVAvailableProcesses]
 AS
 SELECT        dbo.BPAProcess.processid, dbo.BPAProcess.name AS ProcessName, dbo.BPAProcess.description AS ProcessDescription, LEFT(dbo.BPAProcess.processxml, 16384) AS ProcessInput, dbo.BPAGroup.name AS GroupName
@@ -83,11 +83,52 @@ FROM            dbo.BPAResource INNER JOIN
 WHERE        (dbo.BPAResource.DisplayStatus IS NOT NULL) AND (dbo.BPAResource.statusid <> 2)
 GO
 
+CREATE VIEW [dbo].[cstm_BPVLogs]
+AS
+SELECT 
+ROW_NUMBER() OVER(order by sessionnumber desc) as LogId,
+       sessionnumber as SessionNumber
+      ,stagename as StageName
+      ,CASE stagetype
+	  WHEN 2 THEN 'Action'
+	  WHEN 4 THEN 'Decision'
+	  WHEN 8 THEN 'Calculation'
+	  WHEN 64 THEN 'Process'
+	  WHEN 128 THEN 'Page'
+	  WHEN 1024 THEN 'Start'
+	  WHEN 2048 THEN 'End'
+	  WHEN 8192 THEN 'Note'
+	  WHEN 16384 THEN 'Loop Start'
+	  WHEN 32768 THEN 'Loop End'
+	  WHEN 65536 THEN 'Read'
+	  WHEN 131072 THEN 'Write'
+	  WHEN 262144 THEN 'Navigate'
+	  WHEN 524288 THEN 'Code'
+	  WHEN 1048576 THEN 'Choice'
+	  WHEN 4194304 THEN 'Wait'
+	  WHEN 16777216 THEN 'Alert'
+	  WHEN 33554432 THEN 'Exception'
+	  WHEN 67108864 THEN 'Recover'
+	  WHEN 134217728 THEN 'Resume'
+	  WHEN 536870912 THEN 'Multicalculation'
+	  WHEN 1073741824 THEN 'Skill'
+	  ELSE 'Unknown' END as StageType
+      ,ISNULL(processname, '') as 'Process'
+      ,ISNULL(pagename, '') as 'Page'
+      ,ISNULL(objectname, '') as 'Object'
+      ,ISNULL(actionname, '') as 'Action'
+      ,ISNULL(result, '') as Result
+      ,startdatetime as ResourceStart
+      ,enddatetime as ResourceEnd
+      ,ISNULL(attributexml, '') as 'Parameters'
+  FROM dbo.BPASessionLog_NonUnicode
+GO
+
 /*Create user in BP DB for a corresponding login*/
 CREATE USER bpapiuser FOR LOGIN bpapiuser
 GO
 
-/*Grant readonly rights for 5 cstm_ views to created user*/
+/*Grant readonly rights for 6 cstm_* views to created user*/
 GRANT SELECT ON cstm_BPVAvailableProcesses TO bpapiuser
 GO
 
@@ -101,4 +142,7 @@ GRANT SELECT ON cstm_BPVQueueManagement TO bpapiuser
 GO
 
 GRANT SELECT ON cstm_BPVResources TO bpapiuser
+GO
+
+GRANT SELECT ON cstm_BPVLogs TO bpapiuser
 GO
