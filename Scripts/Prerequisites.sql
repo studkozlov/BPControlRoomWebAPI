@@ -86,7 +86,7 @@ GO
 CREATE VIEW [dbo].[cstm_BPVLogs]
 AS
 SELECT 
-ROW_NUMBER() OVER(order by sessionnumber desc) as LogId,
+ROW_NUMBER() OVER(order by startdatetime DESC) as LogId,
        sessionnumber as SessionNumber
       ,stagename as StageName
       ,CASE stagetype

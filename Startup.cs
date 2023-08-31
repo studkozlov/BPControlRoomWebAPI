@@ -37,7 +37,6 @@ namespace BPControlRoomWebAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
-            string connection = Configuration.GetConnectionString("Local");
             services.AddDbContext<ApplicationContext>((serviceProvider, options) =>
             {
                 var httpContext = serviceProvider.GetService<IHttpContextAccessor>().HttpContext;

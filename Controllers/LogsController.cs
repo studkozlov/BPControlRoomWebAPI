@@ -29,7 +29,8 @@ namespace BPControlRoomWebAPI.Controllers
         public async Task<IEnumerable<BPLog>> Get(Int64 sessionNum)
         {
             return  await _db.BPLogs.Where(l => l.SessionNumber == sessionNum)
-                                    .OrderBy(l => l.Id)
+                                    .OrderBy(l => l.ResourceStart)
+                                    .ThenBy(l => l.Id)
                                     .ToArrayAsync();
         }
     }
