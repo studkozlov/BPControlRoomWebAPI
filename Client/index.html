@@ -132,6 +132,9 @@
             top: 0px;
             background: #f6f6f6
         }
+        .header-2 th {
+            top: 23px;
+        }
         td {
             padding: 2px 5px 2px 5px;
             white-space: nowrap;
@@ -291,6 +294,52 @@
                     <div style="flex-grow:1; border: 1px solid black; margin: 2px 5px 0 5px; overflow: auto; font-family: Arial, Helvetica, sans-serif; font-size: small;">
                         <div style="height:100%">
                             <table id="sessions-table">
+                                <thead>
+                                    <tr style="text-align: left;">
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th>
+                                            <select id="session-status-filter" onchange="applySessionsFilter(this)">
+                                                <option value="all" selected>All</option>
+                                                <option value="Running">Running</option>
+                                                <option value="Pending">Pending</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="Terminated">Terminated</option>
+                                                <option value="Stopped">Stopped</option>
+                                                <option value="Stopping">Stopping</option>
+                                            </select>
+                                        </th>
+                                        <th>
+                                            <select id="session-start-date-filter" onchange="applySessionsFilter(this)">
+                                                <option value="today">Today</option>
+                                                <option value="0.5">Last 30 Minutes</option>
+                                                <option value="1">Last 1 Hour</option>
+                                                <option value="2">Last 2 Hours</option>
+                                                <option value="4">Last 4 Hours</option>
+                                                <option value="12">Last 12 Hours</option>
+                                                <option value="24">Last 24 Hours</option>
+                                                <option value="72">Last 3 Days</option>
+                                                <option value="all" selected>Last Month</option>
+                                            </select>
+                                        </th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                    <tr class="header-2" style="text-align: left;">
+                                        <th>ID</th>
+                                        <th>Process</th>
+                                        <th>Resource</th>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Latest Stage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -341,7 +390,19 @@
         let refreshTimerId = 0;
         let queueManagementIsOpen = false, sessionsManagementIsOpen = false;
         let processes = null, resources, sessions, queues = null, queueItems, logs;
+        let filteredSessions = null;
+        let sessionsFilter = {
+            startTime: "2000-01-01 00:00:00",
+            status: "all"
+        };
 
+        function resetFilter() {
+            sessionsFilter.startTime = "2000-01-01 00:00:00";
+            document.getElementById("session-start-date-filter").value = "all";
+
+            sessionsFilter.status = "all";
+            document.getElementById("session-status-filter").value = "all";
+        }
         function openSettings() {
             document.getElementById("api-url").value = apiUrlBase;
             document.getElementById("refresh-frequency").value = REFRESH_TIMEOUT;
@@ -400,6 +461,7 @@
             queues = null;
             resources = null;
             sessions = null;
+            resetFilter();
             switchToAuthView();
         }
         window.onclick = function (event) {
@@ -701,15 +763,16 @@
                 });
         }
 
+        function setFilteredSessions() {
+            filteredSessions = sessions.filter((s) => s.startTime > sessionsFilter.startTime
+                && (sessionsFilter.status == "all" || s.status == sessionsFilter.status));
+        }
         function updateSessionsList() {
-            var htmlContent = '<thead>'
-                + '<tr style = "text-align: left;">'
-                + '<th>ID</th><th>Process</th><th>Resource</th><th>User</th>'
-                + '<th>Status</th><th>Start Time</th><th>End Time</th><th>Latest Stage</th></tr >'
-                + '</thead ><tbody>';
+            var htmlContent = '';
             var color = '';
-            for (var i = 0; i < sessions.length; i++) {
-                switch (sessions[i].status) {
+            setFilteredSessions();
+            for (var i = 0; i < filteredSessions.length; i++) {
+                switch (filteredSessions[i].status) {
                     case 'Completed':
                         color = 'style="color:blue"';
                         break;
@@ -726,21 +789,20 @@
                         color = 'style="color:green"';
                         break;
                 }
-                htmlContent += '<tr id="' + sessions[i].id + '" onclick="selectItem(this)" oncontextmenu="contextMenuHandler(event)" ' + color + ' ondblclick="selectedSessionId = this.id; getLogItems();">';
-                htmlContent += '<td>' + sessions[i].number + '</td>'
-                    + '<td>' + sessions[i].process + '</td>'
-                    + '<td>' + sessions[i].resource + '</td>'
-                    + '<td>' + sessions[i].user + '</td>'
-                    + '<td>' + sessions[i].status + '</td>'
-                    + '<td>' + new Date(sessions[i].startTime).toISOString().split('.')[0].replace('T', ' ') + '</td>'
-                    + '<td>' + (sessions[i].endTime == null ? '' : new Date(sessions[i].endTime).toISOString().split('.')[0].replace('T', ' ')) + '</td>'
-                    + '<td>' + (sessions[i].latestStage == null ? '' : sessions[i].latestStage) + '</td></tr>';
+                htmlContent += '<tr id="' + filteredSessions[i].id + '" onclick="selectItem(this)" oncontextmenu="contextMenuHandler(event)" ' + color + ' ondblclick="selectedSessionId = this.id; getLogItems();">';
+                htmlContent += '<td>' + filteredSessions[i].number + '</td>'
+                    + '<td>' + filteredSessions[i].process + '</td>'
+                    + '<td>' + filteredSessions[i].resource + '</td>'
+                    + '<td>' + filteredSessions[i].user + '</td>'
+                    + '<td>' + filteredSessions[i].status + '</td>'
+                    + '<td>' + filteredSessions[i].startTime.split('.')[0].replace('T', ' ') + '</td>'
+                    + '<td>' + (filteredSessions[i].endTime == null ? '' : filteredSessions[i].endTime.split('.')[0].replace('T', ' ')) + '</td>'
+                    + '<td>' + (filteredSessions[i].latestStage == null ? '' : filteredSessions[i].latestStage) + '</td></tr>';
             }
-            htmlContent += '</tbody>';
-            document.getElementById("sessions-table").innerHTML = htmlContent;
+            document.querySelector("#sessions-table tbody").innerHTML = htmlContent;
         }
         function getSessions() {
-            document.getElementById("sessions-table").innerHTML = '<tr><td><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></td></tr>';
+            document.querySelector("#sessions-table tbody").innerHTML = '<tr><td><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></td></tr>';
             fetch(apiUrlBase + "environment", {
                 method: "GET",
                 headers: {
@@ -752,7 +814,7 @@
                     updateSessionsList();
                 })
                 .catch(err => {
-                    document.getElementById("sessions-table").innerHTML = '<tbody><tr style="color:red;"><td>' + err + '</td></tr></tbody>';
+                    document.querySelector("#sessions-table tbody").innerHTML = '<tbody><tr style="color:red;"><td>' + err + '</td></tr></tbody>';
                 });
         }
         function startSession(process, resource, inputs = null) {
@@ -1030,6 +1092,39 @@
                 .catch(err => {
                     alert(err);
                 });
+        }
+
+        function applySessionsFilter(elem) {
+            switch (elem.id) {
+                case "session-start-date-filter": {
+                    var lowerBoundDate = new Date();
+                    switch (elem.value) {
+                        case "all":
+                            sessionsFilter.startTime = "2000-01-01T00:00:00";
+                            break;
+                        case "today":
+                            sessionsFilter.startTime = lowerBoundDate.getFullYear() + '-'
+                                + (lowerBoundDate.getMonth() + 1).toString().padStart(2, 0) + "-"
+                                + lowerBoundDate.getDate().toString().padStart(2, 0) + 'T00:00:00';
+                            break;
+                        default:
+                            lowerBoundDate.setTime(lowerBoundDate.getTime() - elem.value * 60 * 60 * 1000);
+                            sessionsFilter.startTime = lowerBoundDate.getFullYear() + '-'
+                                + (lowerBoundDate.getMonth() + 1).toString().padStart(2, 0) + "-"
+                                + lowerBoundDate.getDate().toString().padStart(2, 0) + 'T'
+                                + lowerBoundDate.getHours().toString().padStart(2, 0) + ':'
+                                + lowerBoundDate.getMinutes().toString().padStart(2, 0) + ':'
+                                + lowerBoundDate.getSeconds().toString().padStart(2, 0);
+                            break;
+                    }
+                    break;
+                }
+                case "session-status-filter": {
+                    sessionsFilter.status = elem.value;
+                }
+            }
+
+            updateSessionsList();
         }
 
         function contextMenuHandler(e) {

@@ -34,6 +34,7 @@
 <li>User authentication. Sign on/off between different environments.</li>
 <li>Monitoring of work queues and items, published processes, runtime resources, sessions.</li>
 <li>Start and request stopping sessions. Input parameters of business processes are supported (excl. TimeSpan, Image and Binary).</li>
+<li>Basic sessions filtration.</li>
 <li>Log Viewer.</li>
 <li>Client settings (API URL, refresh frequency).</li>
 </ul>
