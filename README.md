@@ -6,6 +6,7 @@
 
 ## Short Demo
 <p>Watch 8 min video</p>
+
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/VyGaMMfndpQ/0.jpg)](http://www.youtube.com/watch?v=VyGaMMfndpQ "Blue Prism - Web-based Control Room")
 
 ## What Are Benefits?
