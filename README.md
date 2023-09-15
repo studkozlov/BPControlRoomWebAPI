@@ -4,6 +4,10 @@
 <p>Implementation of a <b>web API</b> written in .NET Core 3.1 for a web-based analogue of Blue Prism control room  + lightweight HTML/JS <b>client</b>.</p>
 <p>Ideal for monitoring purposes.</p>
 
+## Short Demo
+<p>Watch 8 min video</p>
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/VyGaMMfndpQ/0.jpg)](http://www.youtube.com/watch?v=VyGaMMfndpQ "Blue Prism - Web-based Control Room")
+
 ## What Are Benefits?
 <ul>
 <li><b>Browser-based</b>: no need to install Blue Prism software on client machines. A good option for skilled business users who just want to monitor bot work progress.</li>
