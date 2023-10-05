@@ -9,11 +9,11 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace BPControlRoomWebAPI.Controllers
 {
     [ApiController]
-    [AllowAnonymous]
     public class ConnectionsController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -30,6 +30,7 @@ namespace BPControlRoomWebAPI.Controllers
 
         [HttpGet]
         [Route("[controller]")]
+        [AllowAnonymous]
         public IEnumerable<string> Get()
         {
             return _configuration.GetSection($"{APP_CONNECTIONS_SECTION}:{APP_CONNECTIONS_LIST_KEY}")
@@ -38,6 +39,7 @@ namespace BPControlRoomWebAPI.Controllers
 
         [HttpPut]
         [Route("[controller]/login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Authenticate([FromBody]AuthenticationArgs args)
         {
             var appPath = _configuration.GetSection($"{APP_ENVIRONMENT_SECTION}:{APP_ENVIRONMENT_BPPATH}")
@@ -65,6 +67,36 @@ namespace BPControlRoomWebAPI.Controllers
                 signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
             
                 return Content(new JwtSecurityTokenHandler().WriteToken(jwt));
+        }
+
+        /// <summary>
+        /// The method accepts requests only from users authenticated through Azure AD (by idToken).
+        /// The method checks user's AD groups, compares with BP users table and either provides regular auth token or rejects auth request.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        [HttpPut]
+        [Route("[controller]/loginsso")]
+        [Authorize]
+        public IActionResult AuthenticateSso([FromBody] AuthenticationArgs args)
+        {
+            //Check User's AD groups and compare with BP DB. If match, assign proper role and return generated token
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Email, User.FindFirst("preferred_username")?.Value),//get user's email from User object
+                new Claim(ClaimTypes.Name, "bpsacc"),//service account
+                new Claim("password", "bpsacc_pass"),//service account password
+                new Claim("dbconname", args.ConnectionName)
+            };
+            var jwt = new JwtSecurityToken(
+                issuer: AuthOptions.ISSUER,
+                audience: AuthOptions.AUDIENCE,
+                claims: claims,
+                expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(AuthOptions.LIFETIME)),
+                signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+
+            return Content(new JwtSecurityTokenHandler().WriteToken(jwt));
         }
     }
 }

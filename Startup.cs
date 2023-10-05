@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
+using Microsoft.AspNetCore.Authentication;
 
 namespace BPControlRoomWebAPI
 {
@@ -41,9 +43,6 @@ namespace BPControlRoomWebAPI
             {
                 var httpContext = serviceProvider.GetService<IHttpContextAccessor>().HttpContext;
 
-                /*var httpRequest = httpContext.Request;
-                var connectionQueryStringParameter = httpRequest.Query["conn"].ToString();*/
-
                 var dbconname = httpContext.User.FindFirst("dbconname")?.Value;
 
                 var connectionString = !string.IsNullOrEmpty(dbconname) ?
@@ -52,7 +51,20 @@ namespace BPControlRoomWebAPI
                 options.UseSqlServer(connectionString); 
             });
             services.AddAuthorization();
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+
+            services.AddAuthentication("AuthMethods")
+                .AddPolicyScheme("AuthMethods", "Authorize AzureAD bearer or JWT bearer", options =>
+                {
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        if (context.Request.Path.ToString().Contains("sso"))
+                        {
+                            return AzureADDefaults.JwtBearerAuthenticationScheme;
+                        }
+                        return JwtBearerDefaults.AuthenticationScheme;
+                    };
+                })
+                .AddAzureADBearer(options => Configuration.Bind("AzureAD", options))
                 .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
@@ -66,6 +78,7 @@ namespace BPControlRoomWebAPI
                         ValidateIssuerSigningKey = true
                     };
                 });
+
             services.AddControllers();
             services.AddCors(options =>
             {

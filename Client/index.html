@@ -3,6 +3,9 @@
 <head>
     <link rel="icon" href="Images/favicon.png">
     <title>BP Web Control Room</title>
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.js"
+            integrity="sha384-o4ufwq3oKqc7IoCcR08YtZXmgOljhTggRwxP2CLbSqeXGtitAxwYaUln/05nJjit"
+            crossorigin="anonymous"></script>
     <style>
         html,
         body {
@@ -21,6 +24,7 @@
             background-color: rgb(0,0,0);
             background-color: rgba(0,0,0,0.4);
         }
+
         .modal-content {
             background-color: #fefefe;
             margin: 15% auto;
@@ -28,18 +32,20 @@
             border: 1px solid #888;
             width: 60%;
         }
+
         .close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
+
+            .close:hover,
+            .close:focus {
+                color: black;
+                text-decoration: none;
+                cursor: pointer;
+            }
 
         #sessions-context-menu {
             position: fixed;
@@ -51,28 +57,33 @@
             font-family: "Open Sans", sans-serif;
             display: none;
         }
-        #sessions-context-menu.visible {
-            display: block;
-        }
-        #sessions-context-menu .item {
-            padding: 8px 10px;
-            font-size: 15px;
-            color: #111;
-            cursor: pointer;
-            border-radius: inherit;
-        }
-        #sessions-context-menu .item:hover {
-            background: #90c8f6;
-        }
+
+            #sessions-context-menu.visible {
+                display: block;
+            }
+
+            #sessions-context-menu .item {
+                padding: 8px 10px;
+                font-size: 15px;
+                color: #111;
+                cursor: pointer;
+                border-radius: inherit;
+            }
+
+                #sessions-context-menu .item:hover {
+                    background: #90c8f6;
+                }
 
         ul, .items-list {
             list-style-type: none;
             width: max-content;
         }
+
         .items-list, #control-items-list {
             margin: 0;
             padding: 0;
         }
+
         ul {
             padding-left: 40px;
         }
@@ -81,31 +92,37 @@
             cursor: default;
             user-select: none; /* Prevent text selection */
         }
-        .caret::before {
-            content: "\229E";
-            color: black;
-            display: table-caption;
-            margin-right: 6px;
-            font-size:10px;
-        }
+
+            .caret::before {
+                content: "\229E";
+                color: black;
+                display: table-caption;
+                margin-right: 6px;
+                font-size: 10px;
+            }
+
         .caret-down::before {
             content: "\229F";
         }
+
         .nested {
             display: none;
         }
+
         .active {
             display: block;
-        } 
+        }
 
         .simple {
-            cursor:default;
-            user-select:none;
+            cursor: default;
+            user-select: none;
         }
+
         .selected {
             border: 1px solid #0000ff;
             background-color: #b9d9f4;
         }
+
         tr.selected {
             background-color: #0078d7;
             color: white !important;
@@ -115,14 +132,16 @@
             background-color: #0d2a48;
             color: white;
         }
-        .dragged-over div {
-            color: white !important;
-        }
+
+            .dragged-over div {
+                color: white !important;
+            }
 
         table {
             min-width: 100%;
             user-select: none;
         }
+
         th {
             border-right: 1px solid #a0a0a0;
             padding: 2px 5px 2px 5px;
@@ -132,15 +151,18 @@
             top: 0px;
             background: #f6f6f6
         }
+
         .header-2 th {
             top: 23px;
         }
+
         td {
             padding: 2px 5px 2px 5px;
             white-space: nowrap;
             overflow: hidden;
             border: none;
         }
+
         tr {
             cursor: default;
         }
@@ -148,19 +170,23 @@
         #work-queues-table, #work-items-table, #sessions-table {
             border-spacing: 0;
         }
-        #work-queues-table td, #work-items-table td {
-            border: 1px solid #eeeeee;
-        }
-        #work-queues-table .selected td, #work-items-table .selected td {
-            border: none;
-        }
-        #sessions-table td {
-            border: 1px thick #eeeeee;
-        }
+
+            #work-queues-table td, #work-items-table td {
+                border: 1px solid #eeeeee;
+            }
+
+            #work-queues-table .selected td, #work-items-table .selected td {
+                border: none;
+            }
+
+            #sessions-table td {
+                border: 1px thick #eeeeee;
+            }
 
         #sessions-refresh:hover, #queues-refresh:hover {
             background-color: #518bc7;
         }
+
         #sessions-refresh:active, #queues-refresh:active {
             background-color: #4070a1;
         }
@@ -232,10 +258,22 @@
                     <div id="login-error" style="color:red"></div>
                     <br />
                     <button id="btn-log-in" style="background-color:white; color:steelblue; height:30px; width:50%; float:right;cursor:pointer;" onclick="logIn()">Sign in using Blue Prism credentials</button>
+                    <br /><br />
+                    <div style="display:flex; justify-content:space-around;">
+                        <img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px; display:none" />
+                    </div>
                 </fieldset>
-                <div style="display:flex; justify-content:space-around;">
-                    <img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px; display:none" />
-                </div>
+                <br />
+                <fieldset>
+                    <legend><b>Sign in with SSO</b></legend>
+                    <div id="sso-login-error" style="color:red"></div>
+                    <br />
+                    <button style="background-color:white; color:steelblue; height:30px; width:50%; float:right;cursor:pointer;" onclick="signInSso()">Sign in with SSO (Azure AD)</button>
+                    <br /><br />
+                    <div style="display:flex; justify-content:space-around;">
+                        <img id="sso-login-loading" src="Images/Wait.gif" style="width:50px; margin:5px; display:none" />
+                    </div>
+                </fieldset>
             </div>
         </div>
         <div id="main-views" style="background-color: #fefefe; display: none; flex-direction:row; flex-grow:1; overflow-y: hidden;">
@@ -383,8 +421,146 @@
         </div>
     </div>
     <script type="text/javascript">
+        const msalConfig = {
+            auth: {
+                clientId: "00000000-0000-0000-0000-000000000000",//app client ID
+                authority: "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000000",//company tenant ID
+                redirectUri: "http://localhost",//must be same as control room home page
+            },
+            cache: {
+                cacheLocation: "sessionStorage",
+                storeAuthStateInCookie: false,
+            },
+            system: {
+                loggerOptions: {
+                    loggerCallback: (level, message, containsPii) => {
+                        if (containsPii) {
+                            return;
+                        }
+                        switch (level) {
+                            case msal.LogLevel.Error:
+                                console.log(message);
+                                return;
+                            case msal.LogLevel.Info:
+                                console.log(message);
+                                return;
+                            case msal.LogLevel.Verbose:
+                                console.log(message);
+                                return;
+                            case msal.LogLevel.Warning:
+                                console.log(message);
+                                return;
+                        }
+                    }
+                }
+            }
+        };
+
+        const loginRequest = {
+            scopes: ["User.Read"]
+        };
+
+        const tokenRequest = {
+            scopes: ["User.Read"],
+            forceRefresh: false
+        };
+    </script>
+    <script type="text/javascript">
+
+        const myMSALObj = new msal.PublicClientApplication(msalConfig);
+        let username = "";
+
+        function selectAccount() {
+            const currentAccounts = myMSALObj.getAllAccounts();
+            if (currentAccounts.length === 0) {
+                return;
+            } else if (currentAccounts.length > 1) {
+                alert("Multiple accounts detected.");
+            } else if (currentAccounts.length === 1) {
+                username = currentAccounts[0].username;
+            }
+        }
+        function handleResponse(response) {
+            if (response !== null) {
+                username = response.account.username;
+                var data = {
+                    ConnectionName: document.getElementById("select-connection").value,
+                    Username: "",
+                    Password: ""
+                };
+
+                fetch(apiUrlBase + "connections/loginsso", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + response.idToken
+                    },
+                    body: JSON.stringify(data)
+                }).then(res => res.text())
+                    .then(data => {
+                        const regex = new RegExp(/^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)/gm);
+                        if (regex.test(data)) {
+                            authToken = data;
+                            document.getElementById("sso-login-error").innerHTML = "";
+                            switchToPostAuthView();
+                        }
+                        else {
+                            document.getElementById("sso-login-error").innerHTML = data;
+                        }
+                        document.getElementById("sso-login-loading").style.display = "none";
+                    })
+                    .catch(err => {
+                        document.getElementById("sso-login-error").innerHTML = err;
+                        document.getElementById("sso-login-loading").style.display = "none";
+                    });
+            }
+            else {
+                selectAccount();
+            }
+        }
+        function signInSso() {
+            document.getElementById("sso-login-loading").style.display = "inline";
+
+            myMSALObj.loginPopup(loginRequest)
+                .then(handleResponse)
+                .catch(error => {
+                    alert(error);
+                });
+        }
+        function signOut() {
+            const logoutRequest = {
+                account: myMSALObj.getAccountByUsername(username),
+                postLogoutRedirectUri: msalConfig.auth.redirectUri,
+                mainWindowRedirectUri: msalConfig.auth.redirectUri
+            };
+
+            myMSALObj.logoutPopup(logoutRequest);
+        }
+        function getTokenPopup(request) {
+            request.account = myMSALObj.getAccountByUsername(username);
+
+            return myMSALObj.acquireTokenSilent(request)
+                .catch(error => {
+                    alert("silent token acquisition fails. acquiring token using popup");
+                    if (error instanceof msal.InteractionRequiredAuthError) {
+                        return myMSALObj.acquireTokenPopup(request)
+                            .then(tokenResponse => {
+                                alert(tokenResponse);
+                                return tokenResponse;
+                            }).catch(error => {
+                                alert(error);
+                            });
+                    } else {
+                        alert(error);
+                    }
+                });
+        }
+
+        selectAccount();
+    </script>
+    <script type="text/javascript">
         let REFRESH_TIMEOUT = 60;//sec; Feel free to adjust for your purposes, here or through settings modal dialog (TODO).
-        let apiUrlBase = "https://localhost:44303/";
+        let apiUrlBase = "http://localhost:3565/";//"https://localhost:44303/";
         let authToken = "";
         let selectedQueueId = "", selectedSessionId = "";
         let refreshTimerId = 0;
