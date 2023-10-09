@@ -11,7 +11,7 @@ namespace BPControlRoomWebAPI.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class AvailableProcessesController : ControllerBase
     {
         public class GroupOfProcesses
@@ -30,10 +30,16 @@ namespace BPControlRoomWebAPI.Controllers
             _db = context;
         }
 
+        /// <summary>
+        /// Returns list of published processes divided by a group (folder).
+        /// Requires authentication token.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IEnumerable<GroupOfProcesses>> Get()
         {
-            var processes = await _db.BPProcesses.ToListAsync();
+            var processes = await _db.BPProcesses.AsNoTracking()
+                                                 .ToListAsync();
             return processes.GroupBy(p => p.GroupName)
                             .Select(g => new GroupOfProcesses { Group = g.Key, Processes = g.ToList() })
                             .ToArray();

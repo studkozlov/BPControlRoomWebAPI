@@ -30,10 +30,16 @@ namespace BPControlRoomWebAPI.Controllers
             db = context;
         }
 
+        /// <summary>
+        /// Returns list of all work queues with corresponding statistics divided by group (folder) name.
+        /// Requires authentication token.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IEnumerable<GroupOfWorkQueues>> Get()
         {
-            var workQueues = await db.BPWorkQueues.ToListAsync();
+            var workQueues = await db.BPWorkQueues.AsNoTracking()
+                                                  .ToListAsync();
             return workQueues.GroupBy(wq => wq.WorkQueueGroupName)
                              .Select(g => new GroupOfWorkQueues { Group = g.Key, WorkQueues = g.ToList() })
                              .OrderByDescending(g => g.Group)

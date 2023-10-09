@@ -32,15 +32,27 @@ namespace BPControlRoomWebAPI.Controllers
             _db = context;
         }
 
+        /// <summary>
+        /// Returns list of all sessions within last month.
+        /// Requires authentication token.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("[controller]")]
         public async Task<IEnumerable<BPSession>> Get()
         {
-            return await _db.BPSessions.OrderByDescending(session => session.StartTime)
+            return await _db.BPSessions.AsNoTracking()
+                                       .OrderByDescending(session => session.StartTime)
                                        .Where(s => s.Status != "Debugging" && s.StartTime > DateTime.Now.AddMonths(-1))
                                        .ToArrayAsync();
         }
 
+        /// <summary>
+        /// Creates a new session by starting selected process on a selected runtime resource with satrtup parameters (optionally).
+        /// Requires authentication token.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("[controller]")]
         public async Task<string> Post([FromBody]EnvironmentArgs args)
@@ -53,6 +65,12 @@ namespace BPControlRoomWebAPI.Controllers
             return executor.ExecutedSuccessfully ? "Success " + executor.ExecutionResult : executor.ExecutionResult;
         }
 
+        /// <summary>
+        /// Requests stop of a selected session.
+        /// Requires authentication token.
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
         [HttpDelete]
         [Route("[controller]/{sessionId}")]
         public async Task<string> Delete(string sessionId)

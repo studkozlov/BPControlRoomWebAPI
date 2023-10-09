@@ -19,10 +19,10 @@
 	<li>Nothing is being written or changed in BP database directly.</li></ul></li>
 <li><b>Authentication schemes</b>: Support of both, user/password and SSO authentication.</li>
 <li><b>Easier deployment (vs BP official components)</b>: Run SQL scripts; deploy 2 components, API and client, to IIS; adjust config and settings.</li>
-<li><b>Version-agnostic</b>: one client can connect to BP environments of different versions. No need to install several separate versions of BP to connect to different environments.</li>
+<li><b>Version-agnostic</b>: one client can connect to BP environments of different versions. No need to install several separate versions of BP to connect to different environments (valid only for SSO authentication with subsequent monitoring activities).</li>
 <li><b>Old versions support</b>: is compatible with BP v7.0+ and v6.0+ (that are not compatible with official Blue Prism API). Older versions were not tested.</li>
 <li><b>Familiar friendly interface</b>: html client mimics desktop control room well known to everyone working with BP.</li>
-<li><b>Self-sufficient client</b>: written in vanilla JS; well-portable incorporating HTML, CSS and JS in one file. Doesn't link to any external resources (though SSO logging option requires one side JS library).</li>
+<li><b>Self-sufficient client</b>: written in vanilla JS; well-portable incorporating HTML, CSS and JS in one file. Doesn't link to any external resources (though SSO authentication option requires one external JS library).</li>
 <li><b>Extendable</b>: open for adding new functionality.</li>
 </ul>
 <br>

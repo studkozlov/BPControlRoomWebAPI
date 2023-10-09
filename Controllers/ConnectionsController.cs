@@ -28,6 +28,11 @@ namespace BPControlRoomWebAPI.Controllers
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Returns list of available Blue Prism connections.
+        /// Authentication is not needed.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("[controller]")]
         [AllowAnonymous]
@@ -37,6 +42,11 @@ namespace BPControlRoomWebAPI.Controllers
                                  .Get<string[]>();
         }
 
+        /// <summary>
+        /// Authorizes an user by username and password.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <returns></returns>
         [HttpPut]
         [Route("[controller]/login")]
         [AllowAnonymous]
@@ -70,6 +80,7 @@ namespace BPControlRoomWebAPI.Controllers
         }
 
         /// <summary>
+        /// Authorizes an user by AzureAD ID token.
         /// The method accepts requests only from users authenticated through Azure AD (by idToken).
         /// The method checks user's AD groups, compares with BP users table and either provides regular auth token or rejects auth request.
         /// </summary>

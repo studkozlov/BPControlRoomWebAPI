@@ -24,11 +24,18 @@ namespace BPControlRoomWebAPI.Controllers
             _db = context;
         }
 
+        /// <summary>
+        /// Returns list of log entries for a selected session.
+        /// Requires authentication token.
+        /// </summary>
+        /// <param name="sessionNum"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("[controller]/{sessionNum}")]
         public async Task<IEnumerable<BPLog>> Get(Int64 sessionNum)
         {
-            return  await _db.BPLogs.Where(l => l.SessionNumber == sessionNum)
+            return  await _db.BPLogs.AsNoTracking()
+                                    .Where(l => l.SessionNumber == sessionNum)
                                     .OrderBy(l => l.ResourceStart)
                                     .ThenBy(l => l.Id)
                                     .ToArrayAsync();

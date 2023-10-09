@@ -21,6 +21,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
+using System.IO;
 
 namespace BPControlRoomWebAPI
 {
@@ -48,7 +51,7 @@ namespace BPControlRoomWebAPI
                 var connectionString = !string.IsNullOrEmpty(dbconname) ?
                                        Configuration.GetConnectionString(dbconname) :
                                        "";
-                options.UseSqlServer(connectionString); 
+                options.UseSqlServer(connectionString);
             });
             services.AddAuthorization();
 
@@ -89,6 +92,19 @@ namespace BPControlRoomWebAPI
                           .AllowAnyHeader();
                 });
             });
+
+            services.AddSwaggerGen(config =>
+            {
+                config.SwaggerDoc("v1", new OpenApiInfo() 
+                { 
+                    Title = "Blue Prism Control Room API",
+                    Description = "An ASP.NET Core (v.3) web API for a web-based Blue Prism control room.",
+                    Version = "v1" 
+                });
+
+                var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                config.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -107,6 +123,12 @@ namespace BPControlRoomWebAPI
             app.UseAuthorization();
 
             app.UseCors(CORS_ENABLE_POLICY);
+
+            app.UseSwagger();
+            app.UseSwaggerUI(config =>
+            {
+                config.SwaggerEndpoint("/swagger/v1/swagger.json", "Blue Prism Control Room API");
+            });
 
             app.UseEndpoints(endpoints =>
             {

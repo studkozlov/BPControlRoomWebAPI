@@ -24,11 +24,18 @@ namespace BPControlRoomWebAPI.Controllers
             db = context;
         }
 
+        /// <summary>
+        /// Returns list of work queue items for a selected work queue.
+        /// Requires authentication token.
+        /// </summary>
+        /// <param name="queueId"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("[controller]/{queueId}")]
         public async Task<IEnumerable<BPQueueItem>> Get(Guid queueId)
         {
-            return await db.BPQueueItems.Where(item => item.QueueId == queueId)
+            return await db.BPQueueItems.AsNoTracking()
+                                        .Where(item => item.QueueId == queueId)
                                         .OrderByDescending(item => item.Created)
                                         .ToArrayAsync();
         }

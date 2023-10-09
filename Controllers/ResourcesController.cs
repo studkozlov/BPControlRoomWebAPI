@@ -30,10 +30,16 @@ namespace BPControlRoomWebAPI.Controllers
             _db = context;
         }
 
+        /// <summary>
+        /// Returns list of all runtime resources divided by group (folder) name.
+        /// Requires authentication token.
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IEnumerable<GroupOfResources>> Get()
         {
-            var resources = await _db.BPResources.ToListAsync();
+            var resources = await _db.BPResources.AsNoTracking()
+                                                 .ToListAsync();
             return resources.GroupBy(resource => resource.ResourceGroupName)
                             .Select(g => new GroupOfResources { Group = g.Key, Resources=g.ToList()})
                             .ToArray();
