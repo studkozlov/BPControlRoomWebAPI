@@ -72,12 +72,35 @@ namespace BPControlRoomWebAPI.Controllers
         /// <param name="sessionId"></param>
         /// <returns></returns>
         [HttpDelete]
-        [Route("[controller]/{sessionId}")]
-        public async Task<string> Delete(string sessionId)
+        [Route("[controller]/requeststop/{sessionId}")]
+        public async Task<string> RequestStop(string sessionId)
         {
             var authParams = new AuthenticationParams(User);
             var executor = GetExecutor<AutomatecRequestStopExecutor>();
             executor.SetParams(authParams.ConnectionName, authParams.Username, authParams.GetPasswordAsString(), sessionId);
+            await executor.ExecuteAsync();
+
+            return executor.ExecutedSuccessfully ? "Success " : executor.ExecutionResult;
+        }
+
+        /// <summary>
+        /// Immediately stops selected session.
+        /// Requires authentication token.
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        [HttpDelete]
+        [Route("[controller]/immediatestop/{sessionId}")]
+        public async Task<string> ImmediateStop(string sessionId)
+        {
+            var session = await _db.BPSessions.FindAsync(new Guid(sessionId));
+            if (session == null)
+                return "Session not found.";
+
+            var runtimeResourceName = session.Resource;
+            var authParams = new AuthenticationParams(User);
+            var executor = BpHttpExecutorsFactory.CreateExecutor<BpHttpImmediateStopExecutor>();
+            executor.SetParams(runtimeResourceName, authParams.Username, authParams.GetPasswordAsString(), sessionId);
             await executor.ExecuteAsync();
 
             return executor.ExecutedSuccessfully ? "Success " : executor.ExecutionResult;

@@ -83,3 +83,6 @@
 <p><b>10/5/2023</b>: Authentication using Azure AD is added</p>
 
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/9N35LKYlG04/0.jpg)](https://www.youtube.com/watch?v=9N35LKYlG04 "Blue Prism - SSO for web-based Control Room")
+
+<br>
+<p><b>12/8/2023</b>: "Immediate Stop" option is added to sessions management</p>

@@ -232,6 +232,7 @@
     </div>
     <div id="sessions-context-menu" onclick="selectMenuOptionHandler(event)">
         <div class="item" onclick="stopSession()" id="request-stop-option">Request Stop</div>
+        <div class="item" onclick="immediatelyStopSession()" id="immediate-stop-option">Immediate Stop</div>
         <div class="item" onclick="getLogItems()">View Log</div>
     </div>
     <div style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column;">
@@ -1023,7 +1024,7 @@
         function stopSession() {
             document.getElementById("sessions-context-menu").classList.remove("visible");
 
-            fetch(apiUrlBase + "environment/" + selectedSessionId, {
+            fetch(apiUrlBase + "environment/requeststop/" + selectedSessionId, {
                 method: "DELETE",
                 headers: {
                     "Authorization": "Bearer " + authToken
@@ -1033,6 +1034,30 @@
                     if (text.startsWith("Success")) {
                         getResources();
                         getSessions();
+                    }
+                    else {
+                        alert(text);
+                    }
+                })
+                .catch(err => {
+                    alert(err);
+                });
+        }
+        function immediatelyStopSession() {
+            document.getElementById("sessions-context-menu").classList.remove("visible");
+
+            fetch(apiUrlBase + "environment/immediatestop/" + selectedSessionId, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + authToken
+                }
+            }).then(res => res.text())
+                .then(text => {
+                    if (text.startsWith("Success")) {
+                        sleep(2000).then(() => {
+                            getResources();
+                            getSessions();
+                        });
                     }
                     else {
                         alert(text);
@@ -1307,10 +1332,14 @@
             e.preventDefault();
             selectedSessionId = e.target.closest("tr").id;
             var sessionStatus = sessions.filter((s) => s.id == selectedSessionId)[0].status;
-            if (sessionStatus != "Running")
+            if (sessionStatus != "Running") {
                 document.getElementById("request-stop-option").style.display = "none";
-            else
+                document.getElementById("immediate-stop-option").style.display = "none";
+            }
+            else {
                 document.getElementById("request-stop-option").style.display = "inherit";
+                document.getElementById("immediate-stop-option").style.display = "inherit";
+            }
 
             var contextMenu = document.getElementById("sessions-context-menu");
             const { clientX: mouseX, clientY: mouseY } = e;
@@ -1323,6 +1352,10 @@
             if (e.target.offsetParent != contextMenu) {
                 contextMenu.classList.remove("visible");
             }
+        }
+
+        function sleep(time) {
+            return new Promise((resolve) => setTimeout(resolve, time));
         }
 
         initConnectionsList();
