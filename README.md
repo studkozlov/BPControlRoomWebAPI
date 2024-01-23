@@ -30,7 +30,7 @@
 
 ## What Are Disadvantages?
 <ul>
-<li><b>Limited functionality</b>: at the moment no scheduler management, some basic functions ("Force Retry", "Immediate Stop" etc) are absent, <s>only "user/password" auth scheme is supported</s>.</li>
+<li><b>Limited functionality</b>: at the moment no scheduler management, some basic functions ("Force Retry", <s>"Immediate Stop"</s> etc) are absent, <s>only "user/password" auth scheme is supported</s>.</li>
 <li><b>Not tested on high-volume environments.</b></li>
 </ul>
 <br>
