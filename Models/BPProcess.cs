@@ -23,7 +23,7 @@ namespace BPControlRoomWebAPI.Models
             {
                 var startStageFirstIndex = value.IndexOf("type=\"Start\"");
                 var startStageSecondIndex = value.IndexOf("</stage>", startStageFirstIndex);
-                var cutXml = value.Substring(startStageFirstIndex, startStageSecondIndex);
+                var cutXml = value.Substring(startStageFirstIndex, startStageSecondIndex - startStageFirstIndex);
                 var regex = new Regex("<inputs>(.|\n)*?</inputs>");
                 var match = regex.Match(cutXml);
                 this._processXml = match.Success ? match.Value : string.Empty;
