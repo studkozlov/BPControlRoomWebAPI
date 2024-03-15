@@ -10,6 +10,7 @@ namespace BPControlRoomWebAPI.Models
         public DbSet<BPSession> BPSessions { get; set; } = null;
         public DbSet<BPProcess> BPProcesses { get; set; } = null;
         public DbSet<BPLog> BPLogs { get; set; } = null;
+        public DbSet<BPTask> BPTasks { get; set; } = null;
         public ApplicationContext (DbContextOptions<ApplicationContext> options)
             : base(options)
         {

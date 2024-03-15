@@ -124,6 +124,18 @@ ROW_NUMBER() OVER(order by startdatetime DESC) as LogId,
   FROM dbo.BPASessionLog_NonUnicode
 GO
 
+CREATE VIEW [dbo].[cstm_BPVTasks]
+AS
+SELECT        tasks.id, tasks.name AS TaskName, tasks.description AS TaskDescription, schedules.id AS ScheduleId, schedules.name AS ScheduleName, schedules.description AS ScheduleDescription, inittasks.name AS InitialTask, 
+                         ISNULL(tasks_on_success.name, 'Stop') AS TaskOnComplete, ISNULL(tasks_on_failure.name, 'Abort') AS TaskOnException
+FROM            dbo.BPATask AS tasks INNER JOIN
+                         dbo.BPASchedule AS schedules ON tasks.scheduleid = schedules.id INNER JOIN
+                         dbo.BPATask AS inittasks ON schedules.initialtaskid = inittasks.id LEFT OUTER JOIN
+                         dbo.BPATask AS tasks_on_success ON tasks.onsuccess = tasks_on_success.id LEFT OUTER JOIN
+                         dbo.BPATask AS tasks_on_failure ON tasks.onfailure = tasks_on_failure.id
+WHERE        (schedules.retired = 0)
+GO
+
 /*Create user in BP DB for a corresponding login*/
 CREATE USER bpapiuser FOR LOGIN bpapiuser
 GO
@@ -145,4 +157,7 @@ GRANT SELECT ON cstm_BPVResources TO bpapiuser
 GO
 
 GRANT SELECT ON cstm_BPVLogs TO bpapiuser
+GO
+
+GRANT SELECT ON cstm_BPVTasks TO bpapiuser
 GO

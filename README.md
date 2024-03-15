@@ -3,6 +3,7 @@
 ## What Is It?
 <p>Implementation of a <b>web API</b> written in .NET Core 3.1 for a web-based analogue of Blue Prism control room  + lightweight HTML/JS <b>client</b>.</p>
 <p>Ideal for monitoring purposes.</p>
+<p>Link to a corresponding BP community thread: <a href="https://community.blueprism.com/discussion/personal-project-web-based-control-room#bm37cc54b8-b9e8-4aed-9d7e-018ab6ead2ae">Personal project - web-based Control Room</a>
 
 ## Short Demo
 <p>Watch 8 min video</p>
@@ -80,9 +81,12 @@
 
 ## Updates
 <br>
-<p><b>10/5/2023</b>: Authentication using Azure AD is added</p>
+<p><b>10/5/2023</b>: Authentication using Azure AD has been added</p>
 
 [![IMAGE ALT TEXT](http://img.youtube.com/vi/9N35LKYlG04/0.jpg)](https://www.youtube.com/watch?v=9N35LKYlG04 "Blue Prism - SSO for web-based Control Room")
 
 <br>
-<p><b>12/8/2023</b>: "Immediate Stop" option is added to sessions management</p>
+<p><b>12/8/2023</b>: "Immediate Stop" option has been added to sessions management</p>
+
+<br>
+<p><b>15/3/2024</b>: List of schedules and tasks has been added to the left "Control" Panel</p>

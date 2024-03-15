@@ -408,6 +408,97 @@
                     </div>
                 </div>
             </div>
+            <div id="schedules-views" style="height:100%; width:80%; display:none; flex-direction:column;">
+                <div style="height: 40px; line-height: 40px; padding-left: 10px; background-color: #0d2a48; color: white; font-family: Arial, Helvetica, sans-serif; font-size: large; display: flex; justify-content: space-between;">
+                    <div>Schedules</div>
+                </div>
+                <div id="schedule-view" style="width: 100%; min-height:0; max-height:100%;">
+                    <table style="padding:5px;">
+                        <tr>
+                            <th style="width:100px; background-color:white; border:none"></th>
+                            <th style="background-color:white; border:none"></th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="schedule-name">
+                                    Name
+                                </label>
+                            </td>
+                            <td>
+                                <input type="text" id="schedule-name" disabled style="width:99%" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="schedule-description">
+                                    Description
+                                </label>
+                            </td>
+                            <td>
+                                <input type="text" id="schedule-description" disabled style="width:99%" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="initial-task">
+                                    Initial Task
+                                </label>
+                            </td>
+                            <td>
+                                <input type="text" id="initial-task" disabled style="width:99%" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="task-view" style="width: 100%; min-height:0; max-height:100%;display:none;">
+                    <table style="padding:5px;">
+                        <tr>
+                            <th style="width: 100px; background-color: white; border: none"></th>
+                            <th style="background-color:white; border:none"></th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="task-name">
+                                    Name
+                                </label>
+                            </td>
+                            <td>
+                                <input type="text" id="task-name" disabled style="width:99%" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="task-description">
+                                    Description
+                                </label>
+                            </td>
+                            <td>
+                                <input type="text" id="task-description" disabled style="width:99%" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="task-on-complete">
+                                    On Complete
+                                </label>
+                            </td>
+                            <td>
+                                <input type="text" id="task-on-complete" disabled style="width:99%" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label for="task-on-exception">
+                                    On Exception
+                                </label>
+                            </td>
+                            <td>
+                                <input type="text" id="task-on-exception" disabled style="width:99%" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
         <div id="footer" style="height: 25px; background-color: #0d2a48; display: flex; flex-direction: row; justify-content: space-between;">
             <div id="sign-out" style="color: white; display: none; align-items: center; justify-content: space-around;padding:1px 5px; cursor:pointer; white-space:nowrap;" onclick="logOut()">
@@ -565,8 +656,8 @@
         let authToken = "";
         let selectedQueueId = "", selectedSessionId = "";
         let refreshTimerId = 0;
-        let queueManagementIsOpen = false, sessionsManagementIsOpen = false;
-        let processes = null, resources, sessions, queues = null, queueItems, logs;
+        let queueManagementIsOpen = false, sessionsManagementIsOpen = false, schedulesManagementIsOpen = false;
+        let processes = null, resources, sessions, queues = null, queueItems, logs, schedules = null;
         let filteredSessions = null;
         let sessionsFilter = {
             startTime: "2000-01-01 00:00:00",
@@ -591,7 +682,7 @@
             if (REFRESH_TIMEOUT < 30) {
                 REFRESH_TIMEOUT = 30;
             }
-            if (queueManagementIsOpen || sessionsManagementIsOpen) {// restart timer with a new delay
+            if (queueManagementIsOpen || sessionsManagementIsOpen || schedulesManagementIsOpen) {// restart timer with a new delay
                 clearTimeout(refreshTimerId);
                 refreshTimerId = setInterval(refreshViews, REFRESH_TIMEOUT * 1000);
             }
@@ -636,6 +727,7 @@
             authToken = "";
             processes = null;
             queues = null;
+            schedules = null;
             resources = null;
             sessions = null;
             resetFilter();
@@ -655,11 +747,11 @@
         });
 
         function refreshAllSessionManagement() {
-            if (queues == null) {
-                getQueues();
+            if (queues == null || schedules == null) {
+                getControlListData();
             }
             else {
-                updateQueuesList();
+                updateControlList();
             }
             if (processes == null) {
                 getProcesses();
@@ -686,6 +778,7 @@
 
             sessionsManagementIsOpen = false;
             queueManagementIsOpen = false;
+            schedulesManagementIsOpen = false;
 
             clearTimeout(refreshTimerId);
         }
@@ -710,18 +803,51 @@
 
         function openSessionManagement() {
             document.getElementById("queue-management-views").style.display = "none";
+            document.getElementById("schedules-views").style.display = "none";
             document.getElementById("right-views-container").style.display = "flex";
 
             sessionsManagementIsOpen = true;
             queueManagementIsOpen = false;
+            schedulesManagementIsOpen = false;
             refreshAllSessionManagement();
         }
         function openQueueManagement() {
             document.getElementById("queue-management-views").style.display = "flex";
+            document.getElementById("schedules-views").style.display = "none";
             document.getElementById("right-views-container").style.display = "none";
 
             sessionsManagementIsOpen = false;
             queueManagementIsOpen = true;
+            schedulesManagementIsOpen = false;
+        }
+        function openScheduleManagement() {
+            document.getElementById("queue-management-views").style.display = "none";
+            document.getElementById("schedules-views").style.display = "flex";
+            document.getElementById("right-views-container").style.display = "none";
+
+            sessionsManagementIsOpen = false;
+            queueManagementIsOpen = false;
+            schedulesManagementIsOpen = true;
+        }
+
+        function handleScheduleClick(elem) {
+            var schedule = schedules.filter((s) => s.id = elem.id)[0];
+            document.getElementById("schedule-name").value = schedule.name;
+            document.getElementById("schedule-description").value = schedule.description;
+            document.getElementById("initial-task").value = schedule.initialTask;
+
+            document.getElementById("schedule-view").style.display = "initial";
+            document.getElementById("task-view").style.display = "none";
+        }
+        function handleTaskClick(elem) {
+            var task = schedules.map((g) => g.tasks).flat().filter((t) => t.id == elem.id)[0];
+            document.getElementById("task-name").value = task.taskName;
+            document.getElementById("task-description").value = task.taskDescription;
+            document.getElementById("task-on-complete").value = task.taskOnComplete;
+            document.getElementById("task-on-exception").value = task.taskOnException;
+
+            document.getElementById("schedule-view").style.display = "none";
+            document.getElementById("task-view").style.display = "initial";
         }
 
         function handleCaretClick(elem) {
@@ -730,7 +856,7 @@
         }
 
         function selectItem(elem) {
-            var listElements = document.querySelectorAll("li.simple");
+            var listElements = document.querySelectorAll("li.simple, span.caret");
             for (var i = 0; i < listElements.length; i++)
                 listElements[i].classList.remove("selected");
             var tableRows = document.querySelectorAll("tbody tr");
@@ -1068,7 +1194,7 @@
                 });
         }
 
-        function updateQueuesList() {
+        /*function updateQueuesList() {
             var htmlContent = '<li id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;" onclick="selectItem(this); openSessionManagement()">'
                 + '<img src = "Images/Session_mngmt.png" /> Session Management'
                 + '</li ><li><span class="caret" onclick="handleCaretClick(this)"><img src="Images/Queue_mngmt.png" />Queue Management</span>'
@@ -1112,6 +1238,86 @@
                 .then(data => {
                     queues = data;
                     updateQueuesList();
+                })
+                .catch(err => {
+                    document.getElementById("control-items-list").innerHTML = '<li style="color:red;">' + err + '</li>';
+                    queues = null;
+                });
+        } */
+        function updateControlList() {
+            var htmlContent = '<li id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;" onclick="selectItem(this); openSessionManagement()">'
+                + '<img src = "Images/Session_mngmt.png" /> Session Management'
+                + '</li ><li><span class="caret" onclick="handleCaretClick(this)"><img src="Images/Queue_mngmt.png" />Queue Management</span>'
+                + '<ul class="nested">';
+            for (var i = 0; i < queues.length; i++) {
+                if (queues[i].group != null) {
+                    htmlContent += '<li><span class="caret" onclick = "handleCaretClick(this)" > <img src="Images/Folder.png" />'
+                        + queues[i].group + '</span>'
+                        + '<ul class="nested">';
+                    for (var j = 0; j < queues[i].workQueues.length; j++) {
+                        htmlContent += '<li id="' + queues[i].workQueues[j].id +
+                            '" class="simple" onclick="selectItem(this); updateQueuesTable(this); getQueueItems(this); openQueueManagement()">'
+                            + '<img src="Images/Wq.png" />'
+                            + queues[i].workQueues[j].workQueueName + '</li>';
+                    }
+                    htmlContent += '</ul></li>';
+                }
+                else {
+                    for (var j = 0; j < queues[i].workQueues.length; j++) {
+                        htmlContent += '<li id="' + queues[i].workQueues[j].id +
+                            '" class="simple" onclick="selectItem(this); updateQueuesTable(this); getQueueItems(this); openQueueManagement()">'
+                            + '<img src="Images/Wq.png" />'
+                            + queues[i].workQueues[j].workQueueName + '</li>';
+                    }
+                }
+            }
+
+            htmlContent += '</ul></li><li><span class="caret" onclick="handleCaretClick(this)"><img src="Images/Schedule.png" />Schedules</span>'
+                + '<ul class="nested">';
+            for (var i = 0; i < schedules.length; i++) {
+                htmlContent += '<li><span id="' + schedules[i].id
+                    + '" class="caret" onclick="handleCaretClick(this); selectItem(this); openScheduleManagement(); handleScheduleClick(this);" >'
+                    + ' <img src="Images/Schedule.png" />'
+                    + schedules[i].name + '</span>'
+                    + '<ul class="nested">';
+                for (var j = 0; j < schedules[i].tasks.length; j++) {
+                    htmlContent += '<li class="simple" id="' + schedules[i].tasks[j].id
+                        + '" onclick="selectItem(this); openScheduleManagement(); handleTaskClick(this);">'
+                        + '<img src="Images/Task.png" />'
+                        + schedules[i].tasks[j].taskName + '</li>';
+                    }
+                    htmlContent += '</ul></li>';
+            }
+            htmlContent += '</ul></li>';
+
+            document.getElementById("control-items-list").innerHTML = htmlContent;
+
+            //expandTreeView("control-items-list");
+            document.getElementById("session-management").classList.toggle("selected");
+        }
+        function getControlListData() {
+            document.getElementById("control-items-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></tr>';
+            const fetchQueues = async () => {
+                var res = await fetch(apiUrlBase + "queuemanagement", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + authToken,
+                    }
+                });
+                queues = await res.json();
+            };
+            const fetchSchedules = async () => {
+                var res = await fetch(apiUrlBase + "schedules", {
+                    method: "GET",
+                    headers: {
+                        "Authorization": "Bearer " + authToken,
+                    }
+                });
+                schedules = await res.json();
+            };
+            Promise.all([fetchQueues(), fetchSchedules()])
+                .then(res => {
+                    updateControlList();
                 })
                 .catch(err => {
                     document.getElementById("control-items-list").innerHTML = '<li style="color:red;">' + err + '</li>';
