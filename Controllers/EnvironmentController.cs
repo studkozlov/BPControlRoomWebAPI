@@ -48,7 +48,7 @@ namespace BPControlRoomWebAPI.Controllers
         }
 
         /// <summary>
-        /// Creates a new session by starting selected process on a selected runtime resource with satrtup parameters (optionally).
+        /// Creates a new session by starting selected process on a selected runtime resource with startup parameters (optionally).
         /// Requires authentication token.
         /// </summary>
         /// <param name="args"></param>

@@ -89,4 +89,7 @@
 <p><b>12/8/2023</b>: "Immediate Stop" option has been added to sessions management</p>
 
 <br>
-<p><b>15/3/2024</b>: List of schedules and tasks has been added to the left "Control" Panel</p>
+<p><b>3/15/2024</b>: List of schedules and tasks has been added to the left "Control" Panel</p>
+
+<br>
+<p><b>3/16/2024</b>: "Run Now" option for schedules has been implemented</p>

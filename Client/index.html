@@ -47,7 +47,7 @@
                 cursor: pointer;
             }
 
-        #sessions-context-menu {
+        #sessions-context-menu, #schedules-context-menu {
             position: fixed;
             z-index: 10000;
             width: 150px;
@@ -58,21 +58,21 @@
             display: none;
         }
 
-            #sessions-context-menu.visible {
-                display: block;
-            }
+        #sessions-context-menu.visible, #schedules-context-menu.visible {
+            display: block;
+        }
 
-            #sessions-context-menu .item {
-                padding: 8px 10px;
-                font-size: 15px;
-                color: #111;
-                cursor: pointer;
-                border-radius: inherit;
-            }
+        #sessions-context-menu .item, #schedules-context-menu .item {
+            padding: 8px 10px;
+            font-size: 15px;
+            color: #111;
+            cursor: pointer;
+            border-radius: inherit;
+        }
 
-                #sessions-context-menu .item:hover {
-                    background: #90c8f6;
-                }
+        #sessions-context-menu .item:hover , #schedules-context-menu .item:hover {
+            background: #90c8f6;
+        }
 
         ul, .items-list {
             list-style-type: none;
@@ -230,10 +230,13 @@
     </div>
     <div id="modal-window-inputs" class="modal">
     </div>
-    <div id="sessions-context-menu" onclick="selectMenuOptionHandler(event)">
+    <div id="sessions-context-menu">
         <div class="item" onclick="stopSession()" id="request-stop-option">Request Stop</div>
-        <div class="item" onclick="immediatelyStopSession()" id="immediate-stop-option">Immediate Stop</div>
+        <div class="item" onclick="stopSessionImmediately()" id="immediate-stop-option">Immediate Stop</div>
         <div class="item" onclick="getLogItems()">View Log</div>
+    </div>
+    <div id="schedules-context-menu">
+        <div class="item" onclick="runSchedule()" id="run-schedule-option">Run Now</div>
     </div>
     <div style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; display: flex; flex-direction: column;">
         <div id="sign-in-view" style="background-color: #f0f0f0; display: flex; justify-content: space-around;flex-grow:1">
@@ -476,27 +479,45 @@
                                 <input type="text" id="task-description" disabled style="width:99%" />
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                <label for="task-on-complete">
-                                    On Complete
-                                </label>
-                            </td>
-                            <td>
-                                <input type="text" id="task-on-complete" disabled style="width:99%" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <label for="task-on-exception">
-                                    On Exception
-                                </label>
-                            </td>
-                            <td>
-                                <input type="text" id="task-on-exception" disabled style="width:99%" />
-                            </td>
-                        </tr>
                     </table>
+                    <div style="display:flex; flex-direction:row; width:100%">
+                        <div style="width:50%">
+                            <table style="padding:5px;">
+                                <tr>
+                                    <th style="width: 100px; background-color: white; border: none"></th>
+                                    <th style="background-color:white; border:none"></th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label for="task-on-complete">
+                                            On Complete
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <input type="text" id="task-on-complete" disabled style="width:95%" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="width:50%">
+                            <table style="padding:5px;">
+                                <tr>
+                                    <th style="width: 100px; background-color: white; border: none"></th>
+                                    <th style="background-color:white; border:none"></th>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label for="task-on-exception">
+                                            On Exception
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <input type="text" id="task-on-exception" disabled style="width:95%" />
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -654,7 +675,7 @@
         let REFRESH_TIMEOUT = 60;//sec; Feel free to adjust for your purposes, here or through settings modal dialog (TODO).
         let apiUrlBase = "http://localhost:3565/";//"https://localhost:44303/";
         let authToken = "";
-        let selectedQueueId = "", selectedSessionId = "";
+        let selectedQueueId = "", selectedSessionId = "", selectedScheduleId = "";
         let refreshTimerId = 0;
         let queueManagementIsOpen = false, sessionsManagementIsOpen = false, schedulesManagementIsOpen = false;
         let processes = null, resources, sessions, queues = null, queueItems, logs, schedules = null;
@@ -1092,7 +1113,7 @@
                         color = 'style="color:green"';
                         break;
                 }
-                htmlContent += '<tr id="' + filteredSessions[i].id + '" onclick="selectItem(this)" oncontextmenu="contextMenuHandler(event)" ' + color + ' ondblclick="selectedSessionId = this.id; getLogItems();">';
+                htmlContent += '<tr id="' + filteredSessions[i].id + '" onclick="selectItem(this)" oncontextmenu="sessionContextMenuHandler(event)" ' + color + ' ondblclick="selectedSessionId = this.id; getLogItems();">';
                 htmlContent += '<td>' + filteredSessions[i].number + '</td>'
                     + '<td>' + filteredSessions[i].process + '</td>'
                     + '<td>' + filteredSessions[i].resource + '</td>'
@@ -1169,7 +1190,7 @@
                     alert(err);
                 });
         }
-        function immediatelyStopSession() {
+        function stopSessionImmediately() {
             document.getElementById("sessions-context-menu").classList.remove("visible");
 
             fetch(apiUrlBase + "environment/immediatestop/" + selectedSessionId, {
@@ -1194,56 +1215,6 @@
                 });
         }
 
-        /*function updateQueuesList() {
-            var htmlContent = '<li id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;" onclick="selectItem(this); openSessionManagement()">'
-                + '<img src = "Images/Session_mngmt.png" /> Session Management'
-                + '</li ><li><span class="caret" onclick="handleCaretClick(this)"><img src="Images/Queue_mngmt.png" />Queue Management</span>'
-                + '<ul class="nested">';
-            for (var i = 0; i < queues.length; i++) {
-                if (queues[i].group != null) {
-                    htmlContent += '<li><span class="caret" onclick = "handleCaretClick(this)" > <img src="Images/Folder.png" />'
-                        + queues[i].group + '</span>'
-                        + '<ul class="nested">';
-                    for (var j = 0; j < queues[i].workQueues.length; j++) {
-                        htmlContent += '<li id="' + queues[i].workQueues[j].id +
-                            '" class="simple" onclick="selectItem(this); updateQueuesTable(this); getQueueItems(this); openQueueManagement()">'
-                            + '<img src="Images/Wq.png" />'
-                            + queues[i].workQueues[j].workQueueName + '</li>';
-                    }
-                    htmlContent += '</ul></li>';
-                }
-                else {
-                    for (var j = 0; j < queues[i].workQueues.length; j++) {
-                        htmlContent += '<li id="' + queues[i].workQueues[j].id +
-                            '" class="simple" onclick="selectItem(this); updateQueuesTable(this); getQueueItems(this); openQueueManagement()">'
-                            + '<img src="Images/Wq.png" />'
-                            + queues[i].workQueues[j].workQueueName + '</li>';
-                    }
-                }
-            }
-            htmlContent += '</ul></li>';
-            document.getElementById("control-items-list").innerHTML = htmlContent;
-
-            expandTreeView("control-items-list");
-            document.getElementById("session-management").classList.toggle("selected");
-        }
-        function getQueues() {
-            document.getElementById("control-items-list").innerHTML = '<li><img id="login-loading" src="Images/Wait.gif" style="width:50px; margin:5px;" /></tr>';
-            fetch(apiUrlBase + "queuemanagement", {
-                method: "GET",
-                headers: {
-                    "Authorization": "Bearer " + authToken,
-                }
-            }).then(res => res.json())
-                .then(data => {
-                    queues = data;
-                    updateQueuesList();
-                })
-                .catch(err => {
-                    document.getElementById("control-items-list").innerHTML = '<li style="color:red;">' + err + '</li>';
-                    queues = null;
-                });
-        } */
         function updateControlList() {
             var htmlContent = '<li id="session-management" class="simple" style="padding-left:15px;margin-bottom:5px;" onclick="selectItem(this); openSessionManagement()">'
                 + '<img src = "Images/Session_mngmt.png" /> Session Management'
@@ -1276,7 +1247,8 @@
                 + '<ul class="nested">';
             for (var i = 0; i < schedules.length; i++) {
                 htmlContent += '<li><span id="' + schedules[i].id
-                    + '" class="caret" onclick="handleCaretClick(this); selectItem(this); openScheduleManagement(); handleScheduleClick(this);" >'
+                    + '" class="caret" onclick="handleCaretClick(this); selectItem(this); openScheduleManagement(); handleScheduleClick(this);"'
+                    + ' oncontextmenu="scheduleContextMenuHandler(event)">'
                     + ' <img src="Images/Schedule.png" />'
                     + schedules[i].name + '</span>'
                     + '<ul class="nested">';
@@ -1285,8 +1257,8 @@
                         + '" onclick="selectItem(this); openScheduleManagement(); handleTaskClick(this);">'
                         + '<img src="Images/Task.png" />'
                         + schedules[i].tasks[j].taskName + '</li>';
-                    }
-                    htmlContent += '</ul></li>';
+                }
+                htmlContent += '</ul></li>';
             }
             htmlContent += '</ul></li>';
 
@@ -1324,6 +1296,7 @@
                     queues = null;
                 });
         }
+
         function updateQueuesTable(elem) {
             var queueId = elem.id;
             var queuesGroup = queues.filter((g) => g.workQueues.filter((q) => q.id == queueId).length == 1);
@@ -1345,7 +1318,6 @@
             htmlContent += '</tbody>';
             document.getElementById("work-queues-table").innerHTML = htmlContent;
         }
-
         function updateQueueItemsTable() {
             var htmlContent = '<thead><tr style = "text-align: left;" >'
                 + '<th></th><th style="min-width:60px;">Item Key</th><th>Priority</th><th>Status</th>'
@@ -1415,7 +1387,7 @@
                 + 'th{border-right: 1px solid #a0a0a0;padding: 2px 5px 2px 5px;white-space: nowrap;'
                 + 'overflow: hidden;position: sticky;top: 0px;background: #f6f6f6;}'
                 + 'span {white-space: nowrap;} </style > '
-                + '<scr'+ 'ipt type="text/javascript">function ChangeColor(tableRow, highLight) {if (highLight) {'
+                + '<scr' + 'ipt type="text/javascript">function ChangeColor(tableRow, highLight) {if (highLight) {'
                 + 'tableRow.style.backgroundColor = "#92bafa";}else {tableRow.style.backgroundColor = "white";}}</scr' + 'ipt>'
                 + '</head><body style="margin: 0px;">';
             htmlContent += '<div style="display: flex; flex-direction: column; width: 100%; height: 100%;">'
@@ -1501,6 +1473,32 @@
                 });
         }
 
+        function runSchedule() {
+            document.getElementById("schedules-context-menu").classList.remove("visible");
+
+            var scheduleName = schedules.filter((s) => s.id == selectedScheduleId)[0].name;
+
+            var data = {
+                ScheduleName: scheduleName
+            };
+            fetch(apiUrlBase + "schedules", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + authToken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            }).then(res => res.text())
+                .then(text => {
+                    if (!text.startsWith("Success")) {
+                        alert(text);
+                    }
+                })
+                .catch(err => {
+                    alert(err);
+                });
+        }
+
         function applySessionsFilter(elem) {
             switch (elem.id) {
                 case "session-start-date-filter": {
@@ -1534,7 +1532,7 @@
             updateSessionsList();
         }
 
-        function contextMenuHandler(e) {
+        function sessionContextMenuHandler(e) {
             e.preventDefault();
             selectedSessionId = e.target.closest("tr").id;
             var sessionStatus = sessions.filter((s) => s.id == selectedSessionId)[0].status;
@@ -1553,10 +1551,24 @@
             contextMenu.style.left = mouseX + 'px';
             contextMenu.classList.add("visible");
         }
+        function scheduleContextMenuHandler(e) {
+            e.preventDefault();
+            selectedScheduleId = e.target.id;
+
+            var contextMenu = document.getElementById("schedules-context-menu");
+            const { clientX: mouseX, clientY: mouseY } = e;
+            contextMenu.style.top = mouseY + 'px';
+            contextMenu.style.left = mouseX + 'px';
+            contextMenu.classList.add("visible");
+        }
         function clickContextMenuHandler(e) {
-            var contextMenu = document.getElementById("sessions-context-menu");
-            if (e.target.offsetParent != contextMenu) {
-                contextMenu.classList.remove("visible");
+            var sessionsContextMenu = document.getElementById("sessions-context-menu");
+            var schedulesContextMenu = document.getElementById("schedules-context-menu");
+            if (e.target.offsetParent != sessionsContextMenu) {
+                sessionsContextMenu.classList.remove("visible");
+            }
+            if (e.target.offsetParent != schedulesContextMenu) {
+                schedulesContextMenu.classList.remove("visible");
             }
         }
 
